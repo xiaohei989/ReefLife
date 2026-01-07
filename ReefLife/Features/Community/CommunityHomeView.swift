@@ -9,6 +9,7 @@ import SwiftUI
 
 // MARK: - 社区主页
 struct CommunityHomeView: View {
+    @StateObject private var viewModel = CommunityViewModel()
     @State private var searchText = ""
     @State private var selectedChannel = "硬骨SPS"
     @Environment(\.colorScheme) var colorScheme
@@ -41,12 +42,34 @@ struct CommunityHomeView: View {
                     .padding(.bottom, Spacing.sm)
 
                     // 帖子列表
-                    LazyVStack(spacing: 0) {
-                        ForEach(Post.samples) { post in
-                            NavigationLink(destination: PostDetailView(post: post)) {
-                                CommunityPostItem(post: post)
+                    if viewModel.isLoadingPosts && viewModel.trendingPosts.isEmpty {
+                        VStack(spacing: Spacing.md) {
+                            ProgressView()
+                            Text("加载中...")
+                                .font(.bodySmall)
+                                .foregroundColor(.textSecondaryDark)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.xl)
+                    } else if viewModel.trendingPosts.isEmpty {
+                        VStack(spacing: Spacing.md) {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 40))
+                                .foregroundColor(.textSecondaryDark)
+                            Text("暂无帖子")
+                                .font(.bodyMedium)
+                                .foregroundColor(.textSecondaryDark)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.xl)
+                    } else {
+                        LazyVStack(spacing: 0) {
+                            ForEach(viewModel.trendingPosts) { post in
+                                NavigationLink(destination: PostDetailView(post: post)) {
+                                    CommunityPostItem(post: post)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -311,10 +334,16 @@ struct PostImageCarousel: View {
 // MARK: - 帖子详情页
 struct PostDetailView: View {
     let post: Post
+    @StateObject private var viewModel: PostDetailViewModel
     @State private var commentText = ""
     @State private var showScrollTitle = false
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
+
+    init(post: Post) {
+        self.post = post
+        self._viewModel = StateObject(wrappedValue: PostDetailViewModel(post: post))
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -545,8 +574,25 @@ struct PostDetailView: View {
             .padding(.top, Spacing.lg)
 
             // 评论列表
-            ForEach(Comment.samples) { comment in
-                CommentItem(comment: comment, isOP: comment.authorName == post.authorName)
+            if viewModel.isLoadingComments && viewModel.comments.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    ProgressView()
+                    Text("加载评论中...")
+                        .font(.bodySmall)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
+            } else if viewModel.comments.isEmpty {
+                Text("暂无评论，快来抢沙发吧~")
+                    .font(.bodyMedium)
+                    .foregroundColor(.textSecondaryDark)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.lg)
+            } else {
+                ForEach(viewModel.comments) { comment in
+                    CommentItem(comment: comment, isOP: comment.authorName == post.authorName)
+                }
             }
         }
     }
@@ -928,29 +974,35 @@ struct CreatePostView: View {
 // MARK: - 频道选择Sheet
 struct ChannelPickerSheet: View {
     @Binding var selectedChannel: Channel?
+    @StateObject private var viewModel = ChannelListViewModel()
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
-
-    // 按分类分组频道
-    var groupedChannels: [ChannelCategory: [Channel]] {
-        Dictionary(grouping: Channel.samples, by: { $0.category })
-    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: Spacing.lg) {
-                    ForEach(ChannelCategory.allCases, id: \.self) { category in
-                        if let channels = groupedChannels[category], !channels.isEmpty {
-                            VStack(alignment: .leading, spacing: Spacing.sm) {
-                                Text(category.rawValue)
-                                    .font(.labelMedium)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.textSecondaryDark)
-                                    .padding(.horizontal, Spacing.lg)
+                if viewModel.isLoading && viewModel.channels.isEmpty {
+                    VStack(spacing: Spacing.md) {
+                        ProgressView()
+                        Text("加载频道中...")
+                            .font(.bodySmall)
+                            .foregroundColor(.textSecondaryDark)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xl)
+                } else {
+                    VStack(alignment: .leading, spacing: Spacing.lg) {
+                        ForEach(ChannelCategory.allCases, id: \.self) { category in
+                            if let channels = viewModel.groupedChannels[category], !channels.isEmpty {
+                                VStack(alignment: .leading, spacing: Spacing.sm) {
+                                    Text(category.rawValue)
+                                        .font(.labelMedium)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.textSecondaryDark)
+                                        .padding(.horizontal, Spacing.lg)
 
-                                ForEach(channels) { channel in
-                                    Button(action: {
+                                    ForEach(channels) { channel in
+                                        Button(action: {
                                         selectedChannel = channel
                                         dismiss()
                                     }) {
@@ -996,8 +1048,9 @@ struct ChannelPickerSheet: View {
                             .padding(.vertical, Spacing.sm)
                         }
                     }
+                    .padding(.vertical, Spacing.md)
                 }
-                .padding(.vertical, Spacing.md)
+            }
             }
             .background(Color.adaptiveBackground(for: colorScheme))
             .navigationTitle("选择频道")
@@ -1016,63 +1069,77 @@ struct ChannelPickerSheet: View {
 
 // MARK: - 频道列表页
 struct ChannelListView: View {
+    @StateObject private var viewModel = ChannelListViewModel()
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.xl) {
-                // 热门推荐
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text("热门推荐")
-                        .font(.titleSmall)
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                        .padding(.horizontal, Spacing.sm)
+            if viewModel.isLoading && viewModel.channels.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    ProgressView()
+                    Text("加载频道中...")
+                        .font(.bodySmall)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.xl)
+            } else if viewModel.channels.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "square.grid.2x2")
+                        .font(.system(size: 40))
+                        .foregroundColor(.textSecondaryDark)
+                    Text("暂无频道")
+                        .font(.bodyMedium)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.xl)
+            } else {
+                VStack(alignment: .leading, spacing: Spacing.xl) {
+                    // 热门推荐
+                    let hotChannels = viewModel.channels.filter { $0.isHot }
+                    if !hotChannels.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.md) {
+                            Text("热门推荐")
+                                .font(.titleSmall)
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                                .padding(.horizontal, Spacing.sm)
 
-                    ForEach(Channel.samples.prefix(2)) { channel in
-                        NavigationLink(destination: ChannelDetailView(channel: channel)) {
-                            FeaturedChannelCard(channel: channel)
-                                .contentShape(Rectangle())
+                            ForEach(hotChannels.prefix(2)) { channel in
+                                NavigationLink(destination: ChannelDetailView(channel: channel)) {
+                                    FeaturedChannelCard(channel: channel)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
-                        .buttonStyle(.plain)
+                    }
+
+                    // 按分类显示频道
+                    ForEach(ChannelCategory.allCases, id: \.self) { category in
+                        if let categoryChannels = viewModel.groupedChannels[category], !categoryChannels.isEmpty {
+                            VStack(alignment: .leading, spacing: Spacing.md) {
+                                Text(category.rawValue)
+                                    .font(.titleSmall)
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                                    .padding(.horizontal, Spacing.sm)
+
+                                ForEach(categoryChannels) { channel in
+                                    NavigationLink(destination: ChannelDetailView(channel: channel)) {
+                                        ChannelListItem(channel: channel, showIcon: true)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
                     }
                 }
-
-                // 海水生物与讨论
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text("海水生物与讨论")
-                        .font(.titleSmall)
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                        .padding(.horizontal, Spacing.sm)
-
-                    ForEach(Channel.samples.dropFirst(2).prefix(2)) { channel in
-                        NavigationLink(destination: ChannelDetailView(channel: channel)) {
-                            ChannelListItem(channel: channel)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                // 器材讨论
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text("器材讨论")
-                        .font(.titleSmall)
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                        .padding(.horizontal, Spacing.sm)
-
-                    ForEach(Channel.samples.suffix(2)) { channel in
-                        NavigationLink(destination: ChannelDetailView(channel: channel)) {
-                            ChannelListItem(channel: channel, showIcon: true)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.lg)
             }
-            .padding(.horizontal, Spacing.sm)
-            .padding(.vertical, Spacing.lg)
         }
         .background(Color.adaptiveBackground(for: colorScheme))
         .navigationBarTitleDisplayMode(.inline)

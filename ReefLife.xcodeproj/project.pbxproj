@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		505B99464986723027FBD983 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D8ED2B3B8676A45B85A5C0 /* HomeViewModel.swift */; };
 		E10000010000000000000001 /* ReefLifeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000001 /* ReefLifeApp.swift */; };
 		E10000010000000000000002 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000002 /* Colors.swift */; };
 		E10000010000000000000003 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000003 /* Typography.swift */; };
@@ -28,10 +29,34 @@
 		E10000010000000000000019 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000019 /* ProfileView.swift */; };
 		E10000010000000000000020 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000020 /* Assets.xcassets */; };
 		E10000010000000000000021 /* ChannelDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000021 /* ChannelDetailView.swift */; };
+		E10000010000000000000100 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000100 /* Environment.swift */; };
+		E10000010000000000000101 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000101 /* SupabaseClient.swift */; };
+		E10000010000000000000102 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000102 /* AuthService.swift */; };
+		E10000010000000000000103 /* PostService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000103 /* PostService.swift */; };
+		E10000010000000000000104 /* CommentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000104 /* CommentService.swift */; };
+		E10000010000000000000105 /* ChannelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000105 /* ChannelService.swift */; };
+		E10000010000000000000106 /* SpeciesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000106 /* SpeciesService.swift */; };
+		E10000010000000000000107 /* MediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000107 /* MediaService.swift */; };
+		E10000010000000000000108 /* RealtimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000108 /* RealtimeService.swift */; };
+		E10000010000000000000109 /* DBUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000109 /* DBUser.swift */; };
+		E10000010000000000000110 /* DBPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000110 /* DBPost.swift */; };
+		E10000010000000000000111 /* DBComment.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000111 /* DBComment.swift */; };
+		E10000010000000000000112 /* DBChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000112 /* DBChannel.swift */; };
+		E10000010000000000000113 /* DBSpecies.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000113 /* DBSpecies.swift */; };
+		E10000010000000000000114 /* DBNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000114 /* DBNotification.swift */; };
+		E10000010000000000000115 /* CreatePostDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000115 /* CreatePostDTO.swift */; };
+		E10000010000000000000116 /* CreateCommentDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000116 /* CreateCommentDTO.swift */; };
+		E10000010000000000000117 /* UpdateUserDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000117 /* UpdateUserDTO.swift */; };
+		E10000010000000000000118 /* CommunityViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000118 /* CommunityViewModel.swift */; };
+		E1SUPABASE000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E1SUPABASE000000000002 /* Supabase */; };
+		E2E30E2FC7373EB4C519F32F /* EncyclopediaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D721817E4564ECACDBF94F1B /* EncyclopediaViewModel.swift */; };
+		FF12B1D0457AB57AD613399C /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5BB390B527F262D4DBDE859 /* ProfileViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		E10000030000000000000000 /* ReefLife.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReefLife.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		66D8ED2B3B8676A45B85A5C0 /* HomeViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		D5BB390B527F262D4DBDE859 /* ProfileViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
+		D721817E4564ECACDBF94F1B /* EncyclopediaViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EncyclopediaViewModel.swift; sourceTree = "<group>"; };
 		E10000020000000000000001 /* ReefLifeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReefLifeApp.swift; sourceTree = "<group>"; };
 		E10000020000000000000002 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		E10000020000000000000003 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
@@ -53,6 +78,26 @@
 		E10000020000000000000019 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		E10000020000000000000020 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E10000020000000000000021 /* ChannelDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelDetailView.swift; sourceTree = "<group>"; };
+		E10000020000000000000100 /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
+		E10000020000000000000101 /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
+		E10000020000000000000102 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		E10000020000000000000103 /* PostService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostService.swift; sourceTree = "<group>"; };
+		E10000020000000000000104 /* CommentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentService.swift; sourceTree = "<group>"; };
+		E10000020000000000000105 /* ChannelService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelService.swift; sourceTree = "<group>"; };
+		E10000020000000000000106 /* SpeciesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeciesService.swift; sourceTree = "<group>"; };
+		E10000020000000000000107 /* MediaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaService.swift; sourceTree = "<group>"; };
+		E10000020000000000000108 /* RealtimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeService.swift; sourceTree = "<group>"; };
+		E10000020000000000000109 /* DBUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBUser.swift; sourceTree = "<group>"; };
+		E10000020000000000000110 /* DBPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBPost.swift; sourceTree = "<group>"; };
+		E10000020000000000000111 /* DBComment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBComment.swift; sourceTree = "<group>"; };
+		E10000020000000000000112 /* DBChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBChannel.swift; sourceTree = "<group>"; };
+		E10000020000000000000113 /* DBSpecies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBSpecies.swift; sourceTree = "<group>"; };
+		E10000020000000000000114 /* DBNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBNotification.swift; sourceTree = "<group>"; };
+		E10000020000000000000115 /* CreatePostDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePostDTO.swift; sourceTree = "<group>"; };
+		E10000020000000000000116 /* CreateCommentDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCommentDTO.swift; sourceTree = "<group>"; };
+		E10000020000000000000117 /* UpdateUserDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateUserDTO.swift; sourceTree = "<group>"; };
+		E10000020000000000000118 /* CommunityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityViewModel.swift; sourceTree = "<group>"; };
+		E10000030000000000000000 /* ReefLife.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReefLife.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +105,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1SUPABASE000000000001 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,18 +120,11 @@
 			);
 			sourceTree = "<group>";
 		};
-		E10000070000000000000000 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				E10000030000000000000000 /* ReefLife.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		E10000060000000000000000 /* ReefLife */ = {
 			isa = PBXGroup;
 			children = (
 				E10000080000000000000000 /* App */,
+				E10000200000000000000000 /* Config */,
 				E10000090000000000000000 /* Core */,
 				E100000A0000000000000000 /* Models */,
 				E100000B0000000000000000 /* Navigation */,
@@ -93,6 +132,14 @@
 				E100000D0000000000000000 /* Resources */,
 			);
 			path = ReefLife;
+			sourceTree = "<group>";
+		};
+		E10000070000000000000000 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E10000030000000000000000 /* ReefLife.app */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		E10000080000000000000000 /* App */ = {
@@ -107,8 +154,51 @@
 			isa = PBXGroup;
 			children = (
 				E100000E0000000000000000 /* Design */,
+				E10000210000000000000000 /* Network */,
+				E10000220000000000000000 /* Services */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		E100000A0000000000000000 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E10000020000000000000010 /* Species.swift */,
+				E10000020000000000000011 /* Post.swift */,
+				E10000020000000000000012 /* User.swift */,
+				E10000020000000000000013 /* Comment.swift */,
+				E10000020000000000000014 /* Channel.swift */,
+				E10000230000000000000000 /* Database */,
+				E10000240000000000000000 /* DTO */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E100000B0000000000000000 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				E10000020000000000000015 /* MainTabView.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		E100000C0000000000000000 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				E10000100000000000000000 /* Home */,
+				E10000110000000000000000 /* Encyclopedia */,
+				E10000120000000000000000 /* Community */,
+				E10000130000000000000000 /* Profile */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		E100000D0000000000000000 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E10000020000000000000020 /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		E100000E0000000000000000 /* Design */ = {
@@ -134,41 +224,11 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		E100000A0000000000000000 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				E10000020000000000000010 /* Species.swift */,
-				E10000020000000000000011 /* Post.swift */,
-				E10000020000000000000012 /* User.swift */,
-				E10000020000000000000013 /* Comment.swift */,
-				E10000020000000000000014 /* Channel.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		E100000B0000000000000000 /* Navigation */ = {
-			isa = PBXGroup;
-			children = (
-				E10000020000000000000015 /* MainTabView.swift */,
-			);
-			path = Navigation;
-			sourceTree = "<group>";
-		};
-		E100000C0000000000000000 /* Features */ = {
-			isa = PBXGroup;
-			children = (
-				E10000100000000000000000 /* Home */,
-				E10000110000000000000000 /* Encyclopedia */,
-				E10000120000000000000000 /* Community */,
-				E10000130000000000000000 /* Profile */,
-			);
-			path = Features;
-			sourceTree = "<group>";
-		};
 		E10000100000000000000000 /* Home */ = {
 			isa = PBXGroup;
 			children = (
 				E10000020000000000000016 /* HomeView.swift */,
+				66D8ED2B3B8676A45B85A5C0 /* HomeViewModel.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -177,6 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				E10000020000000000000017 /* EncyclopediaHomeView.swift */,
+				D721817E4564ECACDBF94F1B /* EncyclopediaViewModel.swift */,
 			);
 			path = Encyclopedia;
 			sourceTree = "<group>";
@@ -185,6 +246,7 @@
 			isa = PBXGroup;
 			children = (
 				E10000020000000000000018 /* CommunityHomeView.swift */,
+				E10000020000000000000118 /* CommunityViewModel.swift */,
 				E10000020000000000000021 /* ChannelDetailView.swift */,
 			);
 			path = Community;
@@ -194,16 +256,62 @@
 			isa = PBXGroup;
 			children = (
 				E10000020000000000000019 /* ProfileView.swift */,
+				D5BB390B527F262D4DBDE859 /* ProfileViewModel.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
 		};
-		E100000D0000000000000000 /* Resources */ = {
+		E10000200000000000000000 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				E10000020000000000000020 /* Assets.xcassets */,
+				E10000020000000000000100 /* Environment.swift */,
 			);
-			path = Resources;
+			path = Config;
+			sourceTree = "<group>";
+		};
+		E10000210000000000000000 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				E10000020000000000000101 /* SupabaseClient.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		E10000220000000000000000 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E10000020000000000000102 /* AuthService.swift */,
+				E10000020000000000000103 /* PostService.swift */,
+				E10000020000000000000104 /* CommentService.swift */,
+				E10000020000000000000105 /* ChannelService.swift */,
+				E10000020000000000000106 /* SpeciesService.swift */,
+				E10000020000000000000107 /* MediaService.swift */,
+				E10000020000000000000108 /* RealtimeService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E10000230000000000000000 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				E10000020000000000000109 /* DBUser.swift */,
+				E10000020000000000000110 /* DBPost.swift */,
+				E10000020000000000000111 /* DBComment.swift */,
+				E10000020000000000000112 /* DBChannel.swift */,
+				E10000020000000000000113 /* DBSpecies.swift */,
+				E10000020000000000000114 /* DBNotification.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		E10000240000000000000000 /* DTO */ = {
+			isa = PBXGroup;
+			children = (
+				E10000020000000000000115 /* CreatePostDTO.swift */,
+				E10000020000000000000116 /* CreateCommentDTO.swift */,
+				E10000020000000000000117 /* UpdateUserDTO.swift */,
+			);
+			path = DTO;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -222,6 +330,9 @@
 			dependencies = (
 			);
 			name = ReefLife;
+			packageProductDependencies = (
+				E1SUPABASE000000000002 /* Supabase */,
+			);
 			productName = ReefLife;
 			productReference = E10000030000000000000000 /* ReefLife.app */;
 			productType = "com.apple.product-type.application";
@@ -251,6 +362,9 @@
 				"zh-Hans",
 			);
 			mainGroup = E10000050000000000000000;
+			packageReferences = (
+				E1SUPABASE000000000003 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			productRefGroup = E10000070000000000000000 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -294,8 +408,30 @@
 				E10000010000000000000016 /* HomeView.swift in Sources */,
 				E10000010000000000000017 /* EncyclopediaHomeView.swift in Sources */,
 				E10000010000000000000018 /* CommunityHomeView.swift in Sources */,
+				E10000010000000000000118 /* CommunityViewModel.swift in Sources */,
 				E10000010000000000000021 /* ChannelDetailView.swift in Sources */,
 				E10000010000000000000019 /* ProfileView.swift in Sources */,
+				E10000010000000000000100 /* Environment.swift in Sources */,
+				E10000010000000000000101 /* SupabaseClient.swift in Sources */,
+				E10000010000000000000102 /* AuthService.swift in Sources */,
+				E10000010000000000000103 /* PostService.swift in Sources */,
+				E10000010000000000000104 /* CommentService.swift in Sources */,
+				E10000010000000000000105 /* ChannelService.swift in Sources */,
+				E10000010000000000000106 /* SpeciesService.swift in Sources */,
+				E10000010000000000000107 /* MediaService.swift in Sources */,
+				E10000010000000000000108 /* RealtimeService.swift in Sources */,
+				E10000010000000000000109 /* DBUser.swift in Sources */,
+				E10000010000000000000110 /* DBPost.swift in Sources */,
+				E10000010000000000000111 /* DBComment.swift in Sources */,
+				E10000010000000000000112 /* DBChannel.swift in Sources */,
+				E10000010000000000000113 /* DBSpecies.swift in Sources */,
+				E10000010000000000000114 /* DBNotification.swift in Sources */,
+				E10000010000000000000115 /* CreatePostDTO.swift in Sources */,
+				E10000010000000000000116 /* CreateCommentDTO.swift in Sources */,
+				E10000010000000000000117 /* UpdateUserDTO.swift in Sources */,
+				505B99464986723027FBD983 /* HomeViewModel.swift in Sources */,
+				E2E30E2FC7373EB4C519F32F /* EncyclopediaViewModel.swift in Sources */,
+				FF12B1D0457AB57AD613399C /* ProfileViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -484,15 +620,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E10000190000000000000000 /* Build configuration list for PBXProject "ReefLife" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E100001A0000000000000000 /* Debug */,
-				E100001B0000000000000000 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		E10000150000000000000000 /* Build configuration list for PBXNativeTarget "ReefLife" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -502,7 +629,35 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		E10000190000000000000000 /* Build configuration list for PBXProject "ReefLife" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E100001A0000000000000000 /* Debug */,
+				E100001B0000000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E1SUPABASE000000000003 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E1SUPABASE000000000002 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1SUPABASE000000000003 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E10000180000000000000000 /* Project object */;
 }

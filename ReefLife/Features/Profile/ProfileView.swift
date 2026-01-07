@@ -9,6 +9,7 @@ import SwiftUI
 
 // MARK: - 个人中心主页
 struct ProfileView: View {
+    @StateObject private var viewModel = ProfileViewModel()
     @State private var selectedTab: ProfileTab = .favorites
     @Environment(\.colorScheme) var colorScheme
 
@@ -57,7 +58,7 @@ struct ProfileView: View {
         VStack(spacing: Spacing.lg) {
             // 头像
             ZStack(alignment: .bottomTrailing) {
-                AsyncImage(url: URL(string: User.sample.avatarURL)) { phase in
+                AsyncImage(url: URL(string: viewModel.currentUser?.avatarURL ?? "")) { phase in
                     switch phase {
                     case .success(let image):
                         image
@@ -66,6 +67,11 @@ struct ProfileView: View {
                     default:
                         Circle()
                             .fill(Color.surfaceDarkLight)
+                            .overlay(
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.textSecondaryDark)
+                            )
                     }
                 }
                 .frame(width: 112, height: 112)
@@ -76,48 +82,67 @@ struct ProfileView: View {
                 )
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
 
-                // 徽章
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 18))
-                    .foregroundColor(.white)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(Color.reefPrimary))
-                    .overlay(
-                        Circle()
-                            .stroke(Color.adaptiveBackground(for: colorScheme), lineWidth: 4)
-                    )
-                    .offset(x: 4, y: 4)
+                // 徽章 - 仅已验证用户显示
+                if viewModel.currentUser?.isVerified == true {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.white)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(Color.reefPrimary))
+                        .overlay(
+                            Circle()
+                                .stroke(Color.adaptiveBackground(for: colorScheme), lineWidth: 4)
+                        )
+                        .offset(x: 4, y: 4)
+                }
             }
 
             // 用户名和称号
             VStack(spacing: Spacing.xs) {
-                Text(User.sample.username)
+                Text(viewModel.currentUser?.username ?? "游客")
                     .font(.titleLarge)
                     .fontWeight(.bold)
                     .foregroundColor(colorScheme == .dark ? .white : .black)
 
-                Text(User.sample.title)
+                Text(viewModel.currentUser?.title ?? "尚未登录")
                     .font(.labelMedium)
                     .fontWeight(.medium)
                     .foregroundColor(.reefPrimary)
             }
 
-            // 编辑资料按钮
-            NavigationLink(destination: EditProfileView()) {
-                Text("编辑资料")
-                    .font(.labelMedium)
-                    .fontWeight(.bold)
-                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                    .padding(.horizontal, Spacing.xl)
-                    .padding(.vertical, Spacing.sm)
-                    .background(
-                        Capsule()
-                            .fill(colorScheme == .dark ? Color.surfaceDark : Color.surfaceLight)
-                            .overlay(
-                                Capsule()
-                                    .stroke(colorScheme == .dark ? Color.borderDark : Color.borderLight, lineWidth: 1)
-                            )
-                    )
+            // 编辑资料按钮 / 登录按钮
+            if viewModel.isLoggedIn {
+                NavigationLink(destination: EditProfileView()) {
+                    Text("编辑资料")
+                        .font(.labelMedium)
+                        .fontWeight(.bold)
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .padding(.horizontal, Spacing.xl)
+                        .padding(.vertical, Spacing.sm)
+                        .background(
+                            Capsule()
+                                .fill(colorScheme == .dark ? Color.surfaceDark : Color.surfaceLight)
+                                .overlay(
+                                    Capsule()
+                                        .stroke(colorScheme == .dark ? Color.borderDark : Color.borderLight, lineWidth: 1)
+                                )
+                        )
+                }
+            } else {
+                Button(action: {
+                    // TODO: 导航到登录页面
+                }) {
+                    Text("登录 / 注册")
+                        .font(.labelMedium)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, Spacing.xl)
+                        .padding(.vertical, Spacing.sm)
+                        .background(
+                            Capsule()
+                                .fill(Color.reefPrimary)
+                        )
+                }
             }
         }
         .padding(.vertical, Spacing.xl)
@@ -131,10 +156,10 @@ struct ProfileView: View {
             GridItem(.flexible()),
             GridItem(.flexible())
         ], spacing: Spacing.md) {
-            StatCard(icon: "doc.text", title: "发帖", value: "\(User.sample.postCount)")
-            StatCard(icon: "bookmark", title: "收藏", value: "\(User.sample.favoriteCount)")
-            StatCard(icon: "chart.bar", title: "声望", value: "\(User.sample.reputation)")
-            StatCard(icon: "bubble.right", title: "回复", value: "\(User.sample.replyCount)")
+            StatCard(icon: "doc.text", title: "发帖", value: "\(viewModel.currentUser?.postCount ?? 0)")
+            StatCard(icon: "bookmark", title: "收藏", value: "\(viewModel.currentUser?.favoriteCount ?? 0)")
+            StatCard(icon: "chart.bar", title: "声望", value: "\(viewModel.currentUser?.reputation ?? 0)")
+            StatCard(icon: "bubble.right", title: "回复", value: "\(viewModel.currentUser?.replyCount ?? 0)")
         }
         .padding(.horizontal, Spacing.lg)
         .padding(.bottom, Spacing.lg)
@@ -211,22 +236,44 @@ struct ProfileView: View {
             .padding(.horizontal, Spacing.lg)
 
             // 物种网格
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.lg) {
-                ForEach(Species.samples.prefix(4)) { species in
-                    NavigationLink(destination: SpeciesDetailView(species: species)) {
-                        FavoriteSpeciesCard(species: species)
-                    }
-                    .buttonStyle(.plain)
+            if viewModel.isLoading && viewModel.favoriteSpecies.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    ProgressView()
+                    Text("加载中...")
+                        .font(.bodySmall)
+                        .foregroundColor(.textSecondaryDark)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
+            } else if viewModel.favoriteSpecies.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "bookmark")
+                        .font(.system(size: 40))
+                        .foregroundColor(.textSecondaryDark)
+                    Text("暂无收藏物种")
+                        .font(.bodyMedium)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
+            } else {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.lg) {
+                    ForEach(viewModel.favoriteSpecies.prefix(4)) { species in
+                        NavigationLink(destination: SpeciesDetailView(species: species)) {
+                            FavoriteSpeciesCard(species: species)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, Spacing.lg)
             }
-            .padding(.horizontal, Spacing.lg)
 
             // 创建新收藏按钮
             Button(action: {}) {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "plus.circle")
                         .font(.system(size: 20))
-                    Text("创建新收藏")
+                    Text("浏览物种百科")
                         .font(.labelMedium)
                         .fontWeight(.bold)
                 }
@@ -251,8 +298,30 @@ struct ProfileView: View {
                 .foregroundColor(colorScheme == .dark ? .white : .black)
                 .padding(.horizontal, Spacing.lg)
 
-            ForEach(Post.samples.prefix(3)) { post in
-                ActivityItem(post: post)
+            if viewModel.isLoading && viewModel.userPosts.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    ProgressView()
+                    Text("加载中...")
+                        .font(.bodySmall)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
+            } else if viewModel.userPosts.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 40))
+                        .foregroundColor(.textSecondaryDark)
+                    Text("暂无活动记录")
+                        .font(.bodyMedium)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
+            } else {
+                ForEach(viewModel.userPosts.prefix(3)) { post in
+                    ActivityItem(post: post)
+                }
             }
         }
     }
@@ -435,7 +504,8 @@ struct ActivityItem: View {
 
 // MARK: - 编辑资料页面
 struct EditProfileView: View {
-    @State private var username = User.sample.username
+    @ObservedObject private var authService = AuthService.shared
+    @State private var username = ""
     @State private var bio = ""
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
@@ -445,7 +515,7 @@ struct EditProfileView: View {
             VStack(spacing: Spacing.xl) {
                 // 头像编辑
                 VStack(spacing: Spacing.md) {
-                    AsyncImage(url: URL(string: User.sample.avatarURL)) { phase in
+                    AsyncImage(url: URL(string: authService.user?.avatarURL ?? "")) { phase in
                         switch phase {
                         case .success(let image):
                             image
@@ -454,6 +524,11 @@ struct EditProfileView: View {
                         default:
                             Circle()
                                 .fill(Color.surfaceDarkLight)
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.textSecondaryDark)
+                                )
                         }
                     }
                     .frame(width: 100, height: 100)
@@ -475,6 +550,10 @@ struct EditProfileView: View {
                     }
                 }
                 .padding(.top, Spacing.xl)
+                .onAppear {
+                    username = authService.user?.username ?? ""
+                    bio = authService.user?.bio ?? ""
+                }
 
                 // 表单
                 VStack(spacing: Spacing.lg) {

@@ -22,29 +22,60 @@ enum PostFilterType: String, CaseIterable {
     }
 }
 
+// MARK: - 频道详情 ViewModel
+@MainActor
+final class ChannelDetailViewModel: ObservableObject {
+    @Published var posts: [Post] = []
+    @Published var isLoading = false
+    @Published var error: Error?
+
+    private let channel: Channel
+    private let postService = PostService.shared
+
+    init(channel: Channel) {
+        self.channel = channel
+        Task {
+            await loadPosts()
+        }
+    }
+
+    func loadPosts() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let fetchedPosts = try await postService.getPosts(channelId: channel.id, page: 1, limit: 50)
+            posts = fetchedPosts
+        } catch {
+            print("加载频道帖子失败: \(error)")
+            self.error = error
+        }
+    }
+
+    func filteredPosts(by filter: PostFilterType) -> [Post] {
+        switch filter {
+        case .hot:
+            return posts.sorted { $0.score > $1.score }
+        case .latest:
+            return posts.sorted { $0.createdAt > $1.createdAt }
+        case .featured:
+            return posts.filter { $0.upvotes > 100 }
+        }
+    }
+}
+
 // MARK: - 频道详情页
 struct ChannelDetailView: View {
     let channel: Channel
+    @StateObject private var viewModel: ChannelDetailViewModel
     @State private var selectedFilter: PostFilterType = .hot
     @State private var isJoined: Bool
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
 
-    // 根据筛选类型过滤帖子
-    private var filteredPosts: [Post] {
-        let channelPosts = Post.samples // 实际应用中应根据channelId筛选
-        switch selectedFilter {
-        case .hot:
-            return channelPosts.sorted { $0.score > $1.score }
-        case .latest:
-            return channelPosts.sorted { $0.createdAt > $1.createdAt }
-        case .featured:
-            return channelPosts.filter { $0.upvotes > 100 }
-        }
-    }
-
     init(channel: Channel) {
         self.channel = channel
+        self._viewModel = StateObject(wrappedValue: ChannelDetailViewModel(channel: channel))
         self._isJoined = State(initialValue: channel.isJoined)
     }
 
@@ -54,11 +85,33 @@ struct ChannelDetailView: View {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                     Section {
                         // 帖子列表
-                        ForEach(filteredPosts) { post in
-                            NavigationLink(destination: PostDetailView(post: post)) {
-                                CommunityPostItem(post: post)
+                        if viewModel.isLoading && viewModel.posts.isEmpty {
+                            VStack(spacing: Spacing.md) {
+                                ProgressView()
+                                Text("加载中...")
+                                    .font(.bodySmall)
+                                    .foregroundColor(.textSecondaryDark)
                             }
-                            .buttonStyle(.plain)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.xl)
+                        } else if viewModel.posts.isEmpty {
+                            VStack(spacing: Spacing.md) {
+                                Image(systemName: "doc.text")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.textSecondaryDark)
+                                Text("暂无帖子，快来发第一帖吧！")
+                                    .font(.bodyMedium)
+                                    .foregroundColor(.textSecondaryDark)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.xl)
+                        } else {
+                            ForEach(viewModel.filteredPosts(by: selectedFilter)) { post in
+                                NavigationLink(destination: PostDetailView(post: post)) {
+                                    CommunityPostItem(post: post)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
 
                         // 底部间距

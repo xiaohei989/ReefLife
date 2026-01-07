@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct EncyclopediaHomeView: View {
+    @StateObject private var viewModel = EncyclopediaViewModel()
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
 
@@ -93,14 +94,36 @@ struct EncyclopediaHomeView: View {
             .padding(.bottom, Spacing.xs)
 
             // 物种网格
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.lg), GridItem(.flexible())], spacing: Spacing.lg) {
-                ForEach(Species.samples) { species in
-                    NavigationLink(destination: SpeciesDetailView(species: species)) {
-                        SpeciesCard(species: species)
+            if viewModel.isLoading && viewModel.popularSpecies.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    ProgressView()
+                    Text("加载中...")
+                        .font(.bodySmall)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.xl)
+            } else if viewModel.popularSpecies.isEmpty {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "fish")
+                        .font(.system(size: 40))
+                        .foregroundColor(.textSecondaryDark)
+                    Text("暂无物种数据")
+                        .font(.bodyMedium)
+                        .foregroundColor(.textSecondaryDark)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.xl)
+            } else {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.lg), GridItem(.flexible())], spacing: Spacing.lg) {
+                    ForEach(viewModel.popularSpecies) { species in
+                        NavigationLink(destination: SpeciesDetailView(species: species)) {
+                            SpeciesCard(species: species)
+                        }
                     }
                 }
+                .padding(.horizontal, Spacing.lg)
             }
-            .padding(.horizontal, Spacing.lg)
         }
     }
 }
@@ -108,6 +131,7 @@ struct EncyclopediaHomeView: View {
 // MARK: - 物种列表视图
 struct SpeciesListView: View {
     let category: SpeciesCategory?
+    @StateObject private var viewModel: SpeciesListViewModel
     @State private var searchText = ""
     @State private var selectedFilter: String = "全部"
     @Environment(\.colorScheme) var colorScheme
@@ -115,11 +139,9 @@ struct SpeciesListView: View {
 
     private let filters = ["全部", "鹿角属 (Acropora)", "瓦片属 (Montipora)", "鸟巢属 (Seriatopora)"]
 
-    var filteredSpecies: [Species] {
-        if let category = category {
-            return Species.samples.filter { $0.category == category }
-        }
-        return Species.samples
+    init(category: SpeciesCategory?) {
+        self.category = category
+        self._viewModel = StateObject(wrappedValue: SpeciesListViewModel(category: category))
     }
 
     var body: some View {
@@ -156,15 +178,38 @@ struct SpeciesListView: View {
                 .padding(.bottom, Spacing.md)
 
                 // 物种网格
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.lg), GridItem(.flexible())], spacing: Spacing.lg) {
-                    ForEach(filteredSpecies) { species in
-                        NavigationLink(destination: SpeciesDetailView(species: species)) {
-                            DetailedSpeciesCard(species: species)
+                if viewModel.isLoading && viewModel.species.isEmpty {
+                    VStack(spacing: Spacing.md) {
+                        ProgressView()
+                        Text("加载中...")
+                            .font(.bodySmall)
+                            .foregroundColor(.textSecondaryDark)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xl)
+                } else if viewModel.species.isEmpty {
+                    VStack(spacing: Spacing.md) {
+                        Image(systemName: "fish")
+                            .font(.system(size: 40))
+                            .foregroundColor(.textSecondaryDark)
+                        Text("暂无物种数据")
+                            .font(.bodyMedium)
+                            .foregroundColor(.textSecondaryDark)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xl)
+                } else {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.lg), GridItem(.flexible())], spacing: Spacing.lg) {
+                        ForEach(viewModel.species) { species in
+                            NavigationLink(destination: SpeciesDetailView(species: species)) {
+                                DetailedSpeciesCard(species: species)
+                            }
                         }
                     }
+                    .padding(.horizontal, Spacing.lg)
                 }
-                .padding(.horizontal, Spacing.lg)
-                .padding(.bottom, Size.tabBarHeight + Spacing.lg)
+
+                Spacer(minLength: Size.tabBarHeight + Spacing.lg)
             }
         }
         .background(Color.adaptiveBackground(for: colorScheme))

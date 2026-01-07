@@ -21,6 +21,7 @@ struct User: Identifiable, Codable, Hashable {
     let joinedAt: Date
     let followersCount: Int
     let followingCount: Int
+    let isVerified: Bool           // 是否已验证
 
     // MARK: - 初始化
     init(
@@ -35,7 +36,8 @@ struct User: Identifiable, Codable, Hashable {
         replyCount: Int = 0,
         joinedAt: Date = Date(),
         followersCount: Int = 0,
-        followingCount: Int = 0
+        followingCount: Int = 0,
+        isVerified: Bool = false
     ) {
         self.id = id
         self.username = username
@@ -49,6 +51,7 @@ struct User: Identifiable, Codable, Hashable {
         self.joinedAt = joinedAt
         self.followersCount = followersCount
         self.followingCount = followingCount
+        self.isVerified = isVerified
     }
 }
 
