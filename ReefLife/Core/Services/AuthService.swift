@@ -18,6 +18,7 @@ protocol AuthServiceProtocol {
     func signUp(email: String, password: String, username: String) async throws -> User
     func signIn(email: String, password: String) async throws -> User
     func signInWithApple(idToken: String, nonce: String) async throws -> User
+    func signInWithWeChat() async throws -> User
     func signInWithPhone(phone: String, otp: String) async throws -> User
     func sendOTP(phone: String) async throws
     func signOut() async throws
@@ -48,9 +49,23 @@ final class AuthService: AuthServiceProtocol, ObservableObject {
     }
 
     private var cancellables = Set<AnyCancellable>()
+    private var isExternalAuth = false
+    private let externalUserStorageKey = "ReefLife.externalUser"
 
     private init() {
+        loadExternalUser()
         setupAuthStateListener()
+    }
+
+    /// 重置外部登录状态（在使用 Supabase 认证前调用）
+    private func resetExternalAuthState() async {
+        await MainActor.run { self.isExternalAuth = false }
+        persistExternalUser(nil)
+    }
+
+    /// 在主线程更新当前用户
+    private func updateCurrentUser(_ user: User) async {
+        await MainActor.run { self.user = user }
     }
 
     // MARK: - 监听认证状态变化
@@ -59,6 +74,9 @@ final class AuthService: AuthServiceProtocol, ObservableObject {
         Task {
             for await state in supabase.auth.authStateChanges {
                 await MainActor.run {
+                    if self.isExternalAuth {
+                        return
+                    }
                     switch state.event {
                     case .signedIn, .tokenRefreshed:
                         if let userId = state.session?.user.id {
@@ -83,94 +101,101 @@ final class AuthService: AuthServiceProtocol, ObservableObject {
     // MARK: - 邮箱注册
 
     func signUp(email: String, password: String, username: String) async throws -> User {
-        // 验证输入
+        await resetExternalAuthState()
+
         let signUpDTO = SignUpDTO(email: email, password: password, username: username)
         try signUpDTO.validate()
 
-        // 注册用户
         let response = try await supabase.auth.signUp(
             email: email,
             password: password,
             data: ["username": .string(username)]
         )
 
-        let userId = response.user.id
-
         // 等待触发器创建用户记录
         try await Task.sleep(nanoseconds: 500_000_000)
 
-        // 获取用户信息
-        let user = try await fetchUser(id: userId.uuidString)
-        await MainActor.run { self.user = user }
+        let user = try await fetchUser(id: response.user.id.uuidString)
+        await updateCurrentUser(user)
         return user
     }
 
     // MARK: - 邮箱登录
 
     func signIn(email: String, password: String) async throws -> User {
-        let response = try await supabase.auth.signIn(
-            email: email,
-            password: password
-        )
+        await resetExternalAuthState()
 
-        let userId = response.user.id
-
-        let user = try await fetchUser(id: userId.uuidString)
-        await MainActor.run { self.user = user }
+        let response = try await supabase.auth.signIn(email: email, password: password)
+        let user = try await fetchUser(id: response.user.id.uuidString)
+        await updateCurrentUser(user)
         return user
     }
 
     // MARK: - Apple ID 登录
 
     func signInWithApple(idToken: String, nonce: String) async throws -> User {
+        await resetExternalAuthState()
+
         let response = try await supabase.auth.signInWithIdToken(
-            credentials: .init(
-                provider: .apple,
-                idToken: idToken,
-                nonce: nonce
-            )
+            credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
         )
 
-        let userId = response.user.id
-
-        // 检查是否是新用户，如果是则等待触发器创建记录
+        // 新用户需等待触发器创建记录
         if response.user.createdAt == response.user.updatedAt {
             try await Task.sleep(nanoseconds: 500_000_000)
         }
 
-        let user = try await fetchUser(id: userId.uuidString)
-        await MainActor.run { self.user = user }
+        let user = try await fetchUser(id: response.user.id.uuidString)
+        await updateCurrentUser(user)
+        return user
+    }
+
+    // MARK: - 微信登录
+
+    func signInWithWeChat() async throws -> User {
+        let user = try await WeChatAuthService.shared.signIn()
+        await MainActor.run {
+            self.isExternalAuth = true
+            self.user = user
+        }
+        persistExternalUser(user)
         return user
     }
 
     // MARK: - 手机号登录
 
     func sendOTP(phone: String) async throws {
+        await resetExternalAuthState()
         try await supabase.auth.signInWithOTP(phone: phone)
     }
 
     func signInWithPhone(phone: String, otp: String) async throws -> User {
-        let response = try await supabase.auth.verifyOTP(
-            phone: phone,
-            token: otp,
-            type: .sms
-        )
+        await resetExternalAuthState()
 
-        let userId = response.user.id
+        let response = try await supabase.auth.verifyOTP(phone: phone, token: otp, type: .sms)
 
-        // 检查是否是新用户
+        // 新用户需等待触发器创建记录
         if response.user.createdAt == response.user.updatedAt {
             try await Task.sleep(nanoseconds: 500_000_000)
         }
 
-        let user = try await fetchUser(id: userId.uuidString)
-        await MainActor.run { self.user = user }
+        let user = try await fetchUser(id: response.user.id.uuidString)
+        await updateCurrentUser(user)
         return user
     }
 
     // MARK: - 登出
 
     func signOut() async throws {
+        if isExternalAuth {
+            await MainActor.run {
+                self.user = nil
+                self.isExternalAuth = false
+            }
+            persistExternalUser(nil)
+            return
+        }
+
         try await supabase.auth.signOut()
         await MainActor.run { self.user = nil }
     }
@@ -178,33 +203,30 @@ final class AuthService: AuthServiceProtocol, ObservableObject {
     // MARK: - 重置密码
 
     func resetPassword(email: String) async throws {
+        await resetExternalAuthState()
         try await supabase.auth.resetPasswordForEmail(email)
     }
 
     // MARK: - 更新密码
 
     func updatePassword(newPassword: String) async throws {
-        guard newPassword.count >= 6 else {
-            throw ValidationError.passwordTooShort
-        }
+        await resetExternalAuthState()
+        guard newPassword.count >= 6 else { throw ValidationError.passwordTooShort }
         try await supabase.auth.update(user: .init(password: newPassword))
     }
 
     // MARK: - 刷新会话
 
     func refreshSession() async throws {
+        await resetExternalAuthState()
         _ = try await supabase.auth.refreshSession()
     }
 
     // MARK: - 删除账户
 
     func deleteAccount() async throws {
-        guard let userId = supabase.currentUserId else {
-            throw AuthError.unauthorized
-        }
-
-        // 删除用户数据（RLS 会限制只能删除自己的数据）
-        // 注意：实际删除应该通过 Edge Function 处理
+        await resetExternalAuthState()
+        guard supabase.currentUserId != nil else { throw AuthError.unauthorized }
         try await supabase.auth.signOut()
         await MainActor.run { self.user = nil }
     }
@@ -221,6 +243,29 @@ final class AuthService: AuthServiceProtocol, ObservableObject {
             .value
 
         return dbUser.toDomain()
+    }
+
+    // MARK: - 外部登录持久化
+
+    private func loadExternalUser() {
+        guard let data = UserDefaults.standard.data(forKey: externalUserStorageKey) else { return }
+        do {
+            let user = try JSONDecoder().decode(User.self, from: data)
+            self.user = user
+            self.isExternalAuth = true
+        } catch {
+            UserDefaults.standard.removeObject(forKey: externalUserStorageKey)
+        }
+    }
+
+    private func persistExternalUser(_ user: User?) {
+        if let user {
+            if let data = try? JSONEncoder().encode(user) {
+                UserDefaults.standard.set(data, forKey: externalUserStorageKey)
+            }
+        } else {
+            UserDefaults.standard.removeObject(forKey: externalUserStorageKey)
+        }
     }
 
     // MARK: - 更新用户信息
@@ -245,6 +290,7 @@ final class AuthService: AuthServiceProtocol, ObservableObject {
         await MainActor.run { self.user = user }
         return user
     }
+
 }
 
 // MARK: - 认证错误

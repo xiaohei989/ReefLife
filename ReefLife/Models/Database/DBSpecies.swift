@@ -26,6 +26,7 @@ struct DBSpecies: Codable {
     let careTips: String?
     let imageUrls: [String]
     let origin: String?
+    let subcategoryId: String?
 
     // 珊瑚特有属性
     let lightRequirement: String?
@@ -50,6 +51,7 @@ struct DBSpecies: Codable {
         case temperature, ph, salinity
         case careTips = "care_tips"
         case imageUrls = "image_urls"
+        case subcategoryId = "subcategory_id"
         case lightRequirement = "light_requirement"
         case flowRequirement = "flow_requirement"
         case calcium, alkalinity, magnesium
@@ -78,6 +80,7 @@ struct DBSpecies: Codable {
             description: description ?? "",
             imageURLs: imageUrls,
             origin: origin ?? "",
+            subcategoryId: subcategoryId,
             lightRequirement: lightRequirement,
             flowRequirement: flowRequirement,
             calcium: calcium,

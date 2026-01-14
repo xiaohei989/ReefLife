@@ -13,6 +13,7 @@ struct HomeView: View {
     @State private var showChannelList = false
     @State private var selectedChannel: Channel?
     @State private var showChannelDetail = false
+    @State private var showSearchResults = false
     @Environment(\.colorScheme) var colorScheme
 
     // 精选频道配置
@@ -28,9 +29,13 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     // 搜索栏
-                    SearchBar(text: $searchText, placeholder: "搜索鱼类、珊瑚或讨论...")
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.lg)
+                    SearchBar(text: $searchText, placeholder: "搜索鱼类、珊瑚或讨论...") {
+                        if !searchText.isEmpty {
+                            showSearchResults = true
+                        }
+                    }
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.vertical, Spacing.lg)
 
                     // 社区精选
                     featuredSection
@@ -39,6 +44,9 @@ struct HomeView: View {
                     latestPostsSection
                 }
                 .padding(.bottom, Size.tabBarHeight + Spacing.lg)
+            }
+            .refreshable {
+                await viewModel.refresh()
             }
             .background(Color.adaptiveBackground(for: colorScheme))
             .navigationBarTitleDisplayMode(.inline)
@@ -66,6 +74,9 @@ struct HomeView: View {
                 if let channel = selectedChannel {
                     ChannelDetailView(channel: channel)
                 }
+            }
+            .navigationDestination(isPresented: $showSearchResults) {
+                SearchResultsView(query: searchText)
             }
         }
     }
@@ -137,33 +148,31 @@ struct HomeView: View {
                 .padding(.horizontal, Spacing.lg)
 
             // 帖子列表
-            if viewModel.isLoading && viewModel.trendingPosts.isEmpty {
-                VStack(spacing: Spacing.md) {
-                    ProgressView()
-                    Text("加载中...")
-                        .font(.bodySmall)
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.xl)
-            } else if viewModel.trendingPosts.isEmpty {
-                VStack(spacing: Spacing.md) {
-                    Image(systemName: "doc.text")
-                        .font(.system(size: 40))
-                        .foregroundColor(.textSecondaryDark)
-                    Text("暂无热帖")
-                        .font(.bodyMedium)
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.xl)
-            } else {
+            ContentStateView(
+                isLoading: viewModel.isLoading,
+                isEmpty: viewModel.trendingPosts.isEmpty,
+                emptyIcon: "doc.text",
+                emptyMessage: "暂无热帖"
+            ) {
                 LazyVStack(spacing: 0) {
                     ForEach(viewModel.trendingPosts) { post in
                         NavigationLink(destination: PostDetailView(post: post)) {
                             PostListItem(post: post)
                         }
                         .buttonStyle(.plain)
+                        .onAppear {
+                            // 检查是否需要加载更多
+                            Task {
+                                await viewModel.loadMoreIfNeeded(currentPost: post)
+                            }
+                        }
+                    }
+
+                    // 加载更多指示器
+                    if viewModel.isLoadingMore {
+                        LoadingMoreIndicator()
+                    } else if !viewModel.hasMorePosts && !viewModel.trendingPosts.isEmpty {
+                        NoMoreDataView()
                     }
                 }
             }
@@ -312,6 +321,33 @@ struct PostListItem: View {
                 .background(Color.borderDark)
                 .padding(.leading, Spacing.lg + Size.postThumbnail + Spacing.md)
         }
+    }
+}
+
+// MARK: - 加载更多指示器
+struct LoadingMoreIndicator: View {
+    var body: some View {
+        HStack {
+            Spacer()
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle())
+            Spacer()
+        }
+        .padding(.vertical, Spacing.lg)
+    }
+}
+
+// MARK: - 没有更多数据
+struct NoMoreDataView: View {
+    var body: some View {
+        HStack {
+            Spacer()
+            Text("没有更多内容了")
+                .font(.bodySmall)
+                .foregroundColor(.textSecondaryDark)
+            Spacer()
+        }
+        .padding(.vertical, Spacing.lg)
     }
 }
 

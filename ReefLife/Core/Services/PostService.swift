@@ -11,7 +11,7 @@ import Supabase
 // MARK: - 帖子服务协议
 protocol PostServiceProtocol {
     func getPosts(channelId: String?, tag: PostTag?, page: Int, limit: Int) async throws -> [Post]
-    func getTrendingPosts(limit: Int) async throws -> [Post]
+    func getTrendingPosts(page: Int, limit: Int) async throws -> [Post]
     func getPost(id: String) async throws -> Post
     func createPost(_ dto: CreatePostDTO) async throws -> Post
     func updatePost(id: String, _ dto: UpdatePostDTO) async throws -> Post
@@ -74,11 +74,11 @@ final class PostService: PostServiceProtocol {
 
     // MARK: - 获取热门帖子
 
-    func getTrendingPosts(limit: Int = 20) async throws -> [Post] {
+    func getTrendingPosts(page: Int = 1, limit: Int = 20) async throws -> [Post] {
         let response: [DBPostDetail] = try await supabase.database
             .from(Views.trendingPosts)
             .select()
-            .limit(limit)
+            .range(from: (page - 1) * limit, to: page * limit - 1)
             .execute()
             .value
 

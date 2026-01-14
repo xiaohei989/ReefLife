@@ -27,10 +27,14 @@ enum PostFilterType: String, CaseIterable {
 final class ChannelDetailViewModel: ObservableObject {
     @Published var posts: [Post] = []
     @Published var isLoading = false
+    @Published var isLoadingMore = false
+    @Published var hasMorePosts = true
     @Published var error: Error?
 
     private let channel: Channel
     private let postService = PostService.shared
+    private var currentPage = 1
+    private let pageSize = 20
 
     init(channel: Channel) {
         self.channel = channel
@@ -44,11 +48,54 @@ final class ChannelDetailViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let fetchedPosts = try await postService.getPosts(channelId: channel.id, page: 1, limit: 50)
+            let fetchedPosts = try await postService.getPosts(channelId: channel.id, page: 1, limit: pageSize)
             posts = fetchedPosts
+            currentPage = 1
+            hasMorePosts = fetchedPosts.count >= pageSize
         } catch {
             print("加载频道帖子失败: \(error)")
             self.error = error
+        }
+    }
+
+    func loadMorePosts() async {
+        guard hasMorePosts, !isLoadingMore, !isLoading else { return }
+
+        isLoadingMore = true
+        defer { isLoadingMore = false }
+
+        do {
+            let nextPage = currentPage + 1
+            let fetchedPosts = try await postService.getPosts(channelId: channel.id, page: nextPage, limit: pageSize)
+
+            if fetchedPosts.isEmpty {
+                hasMorePosts = false
+            } else {
+                posts.append(contentsOf: fetchedPosts)
+                currentPage = nextPage
+                hasMorePosts = fetchedPosts.count >= pageSize
+            }
+        } catch {
+            print("加载更多帖子失败: \(error)")
+            self.error = error
+        }
+    }
+
+    func refresh() async {
+        currentPage = 1
+        hasMorePosts = true
+        await loadPosts()
+    }
+
+    var loadMoreState: LoadMoreState {
+        if isLoadingMore {
+            return .loading
+        } else if !hasMorePosts {
+            return .noMore
+        } else if let error = error {
+            return .error(error.localizedDescription)
+        } else {
+            return .idle
         }
     }
 
@@ -112,6 +159,23 @@ struct ChannelDetailView: View {
                                 }
                                 .buttonStyle(.plain)
                             }
+
+                            // 加载更多触发器
+                            LoadMoreTrigger(
+                                isLoading: viewModel.isLoadingMore,
+                                hasMore: viewModel.hasMorePosts
+                            ) {
+                                Task {
+                                    await viewModel.loadMorePosts()
+                                }
+                            }
+
+                            // 加载更多状态显示
+                            LoadMoreView(state: viewModel.loadMoreState) {
+                                Task {
+                                    await viewModel.loadMorePosts()
+                                }
+                            }
                         }
 
                         // 底部间距
@@ -121,6 +185,9 @@ struct ChannelDetailView: View {
                         FilterTabBar(selectedFilter: $selectedFilter)
                     }
                 }
+            }
+            .refreshable {
+                await viewModel.refresh()
             }
             .background(Color.adaptiveBackground(for: colorScheme))
 

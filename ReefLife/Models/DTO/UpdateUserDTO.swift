@@ -80,23 +80,4 @@ struct SignUpDTO {
     }
 }
 
-// MARK: - 验证错误
-enum ValidationError: LocalizedError {
-    case invalidEmail
-    case passwordTooShort
-    case invalidUsername
-    case invalidUsernameCharacters
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidEmail:
-            return "请输入有效的邮箱地址"
-        case .passwordTooShort:
-            return "密码至少需要6个字符"
-        case .invalidUsername:
-            return "用户名长度需要在2-20个字符之间"
-        case .invalidUsernameCharacters:
-            return "用户名只能包含字母、数字、下划线和中文"
-        }
-    }
-}
+// ValidationError 已在 ErrorHandler.swift 中定义

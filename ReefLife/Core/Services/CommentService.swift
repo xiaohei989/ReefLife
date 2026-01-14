@@ -157,24 +157,44 @@ final class CommentService: CommentServiceProtocol {
             .execute()
     }
 
-    // MARK: - 点赞评论
+    // MARK: - 点赞评论（切换点赞状态）
 
     func likeComment(id: String) async throws {
         guard let userId = supabase.currentUserId else {
             throw CommentError.unauthorized
         }
 
-        let like = DBCommentLike(
-            id: nil,
-            commentId: id,
-            userId: userId,
-            createdAt: nil
-        )
-
-        try await supabase.database
+        // 检查是否已经点赞
+        let existingLikes: [DBCommentLike] = try await supabase.database
             .from(Tables.commentLikes)
-            .insert(like)
+            .select()
+            .eq("comment_id", value: id)
+            .eq("user_id", value: userId)
             .execute()
+            .value
+
+        if existingLikes.isEmpty {
+            // 未点赞，添加点赞
+            let like = DBCommentLike(
+                id: nil,
+                commentId: id,
+                userId: userId,
+                createdAt: nil
+            )
+
+            try await supabase.database
+                .from(Tables.commentLikes)
+                .insert(like)
+                .execute()
+        } else {
+            // 已点赞，取消点赞
+            try await supabase.database
+                .from(Tables.commentLikes)
+                .delete()
+                .eq("comment_id", value: id)
+                .eq("user_id", value: userId)
+                .execute()
+        }
     }
 
     // MARK: - 取消点赞
@@ -222,8 +242,21 @@ final class CommentService: CommentServiceProtocol {
         }
     }
 
+    // 用于解码部分查询结果的简单结构体
+    private struct CommentDepthResult: Codable {
+        let depth: Int?
+    }
+
+    private struct AuthorIdResult: Codable {
+        let authorId: String
+
+        enum CodingKeys: String, CodingKey {
+            case authorId = "author_id"
+        }
+    }
+
     private func getCommentDepth(id: String) async throws -> Int {
-        let comment: DBComment = try await supabase.database
+        let result: CommentDepthResult = try await supabase.database
             .from(Tables.comments)
             .select("depth")
             .eq("id", value: id)
@@ -231,12 +264,12 @@ final class CommentService: CommentServiceProtocol {
             .execute()
             .value
 
-        return comment.depth ?? 0
+        return result.depth ?? 0
     }
 
     private func createCommentNotification(comment: DBCommentDetail, dto: CreateCommentDTO) async throws {
         // 获取帖子作者
-        let post: DBPost = try await supabase.database
+        let postAuthor: AuthorIdResult = try await supabase.database
             .from(Tables.posts)
             .select("author_id")
             .eq("id", value: dto.postId)
@@ -246,7 +279,7 @@ final class CommentService: CommentServiceProtocol {
 
         // 如果是回复，通知被回复的评论作者
         if let parentId = dto.parentId {
-            let parentComment: DBComment = try await supabase.database
+            let parentAuthor: AuthorIdResult = try await supabase.database
                 .from(Tables.comments)
                 .select("author_id")
                 .eq("id", value: parentId)
@@ -256,7 +289,7 @@ final class CommentService: CommentServiceProtocol {
 
             try await supabase.database
                 .rpc(RPCFunctions.createNotification, params: [
-                    "p_user_id": parentComment.authorId,
+                    "p_user_id": parentAuthor.authorId,
                     "p_type": "reply",
                     "p_actor_id": comment.authorId,
                     "p_post_id": dto.postId,
@@ -269,7 +302,7 @@ final class CommentService: CommentServiceProtocol {
             // 通知帖子作者
             try await supabase.database
                 .rpc(RPCFunctions.createNotification, params: [
-                    "p_user_id": post.authorId,
+                    "p_user_id": postAuthor.authorId,
                     "p_type": "comment",
                     "p_actor_id": comment.authorId,
                     "p_post_id": dto.postId,

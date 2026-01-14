@@ -94,27 +94,12 @@ struct EncyclopediaHomeView: View {
             .padding(.bottom, Spacing.xs)
 
             // 物种网格
-            if viewModel.isLoading && viewModel.popularSpecies.isEmpty {
-                VStack(spacing: Spacing.md) {
-                    ProgressView()
-                    Text("加载中...")
-                        .font(.bodySmall)
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.xl)
-            } else if viewModel.popularSpecies.isEmpty {
-                VStack(spacing: Spacing.md) {
-                    Image(systemName: "fish")
-                        .font(.system(size: 40))
-                        .foregroundColor(.textSecondaryDark)
-                    Text("暂无物种数据")
-                        .font(.bodyMedium)
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.xl)
-            } else {
+            ContentStateView(
+                isLoading: viewModel.isLoading,
+                isEmpty: viewModel.popularSpecies.isEmpty,
+                emptyIcon: "fish",
+                emptyMessage: "暂无物种数据"
+            ) {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.lg), GridItem(.flexible())], spacing: Spacing.lg) {
                     ForEach(viewModel.popularSpecies) { species in
                         NavigationLink(destination: SpeciesDetailView(species: species)) {
@@ -133,11 +118,11 @@ struct SpeciesListView: View {
     let category: SpeciesCategory?
     @StateObject private var viewModel: SpeciesListViewModel
     @State private var searchText = ""
-    @State private var selectedFilter: String = "全部"
+    @State private var selectedSubcategory: Subcategory?
+    @State private var showSubcategoryPicker = false
+    @State private var subcategories: [Subcategory] = []
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
-
-    private let filters = ["全部", "鹿角属 (Acropora)", "瓦片属 (Montipora)", "鸟巢属 (Seriatopora)"]
 
     init(category: SpeciesCategory?) {
         self.category = category
@@ -148,59 +133,36 @@ struct SpeciesListView: View {
         ScrollView {
             VStack(spacing: 0) {
                 // 搜索栏
-                SearchBar(text: $searchText, placeholder: "搜索珊瑚品种、学名...")
+                SearchBar(text: $searchText, placeholder: "搜索物种名称、学名...")
                     .padding(.horizontal, Spacing.lg)
                     .padding(.vertical, Spacing.md)
 
-                // 筛选标签
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Spacing.md) {
-                        ForEach(filters, id: \.self) { filter in
-                            CategoryChip(
-                                title: filter,
-                                isSelected: selectedFilter == filter,
-                                action: { selectedFilter = filter }
-                            )
-                        }
-                    }
-                    .padding(.horizontal, Spacing.lg)
-                }
-                .padding(.bottom, Spacing.lg)
-
                 // 所有品种标题
                 HStack {
-                    Text("所有品种")
+                    Text(selectedSubcategory?.name ?? "所有品种")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
+
+                    if let subcategory = selectedSubcategory {
+                        Text("(\(subcategory.speciesCount))")
+                            .font(.system(size: 14))
+                            .foregroundColor(.textSecondaryDark)
+                    }
+
                     Spacer()
                 }
                 .padding(.horizontal, Spacing.lg)
                 .padding(.bottom, Spacing.md)
 
                 // 物种网格
-                if viewModel.isLoading && viewModel.species.isEmpty {
-                    VStack(spacing: Spacing.md) {
-                        ProgressView()
-                        Text("加载中...")
-                            .font(.bodySmall)
-                            .foregroundColor(.textSecondaryDark)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.xl)
-                } else if viewModel.species.isEmpty {
-                    VStack(spacing: Spacing.md) {
-                        Image(systemName: "fish")
-                            .font(.system(size: 40))
-                            .foregroundColor(.textSecondaryDark)
-                        Text("暂无物种数据")
-                            .font(.bodyMedium)
-                            .foregroundColor(.textSecondaryDark)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.xl)
-                } else {
+                ContentStateView(
+                    isLoading: viewModel.isLoading,
+                    isEmpty: filteredSpecies.isEmpty,
+                    emptyIcon: "fish",
+                    emptyMessage: "暂无物种数据"
+                ) {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.lg), GridItem(.flexible())], spacing: Spacing.lg) {
-                        ForEach(viewModel.species) { species in
+                        ForEach(filteredSpecies) { species in
                             NavigationLink(destination: SpeciesDetailView(species: species)) {
                                 DetailedSpeciesCard(species: species)
                             }
@@ -217,23 +179,51 @@ struct SpeciesListView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {}) {
-                    ZStack {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                        // 筛选器指示点
-                        Circle()
-                            .fill(Color.reefPrimary)
-                            .frame(width: 8, height: 8)
-                            .offset(x: 8, y: -8)
+                // 子分类选择按钮
+                SubcategoryNavButton(
+                    selectedSubcategory: selectedSubcategory,
+                    action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            showSubcategoryPicker = true
+                        }
                     }
-                }
+                )
             }
         }
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+        .bottomSheet(isPresented: $showSubcategoryPicker) {
+            if let cat = category {
+                SubcategoryPicker(
+                    category: cat,
+                    subcategories: subcategories,
+                    selectedSubcategory: $selectedSubcategory,
+                    isPresented: $showSubcategoryPicker
+                )
+            }
+        }
+        .task {
+            await loadSubcategories()
+        }
     }
 
+    // MARK: - 筛选后的物种列表
+    private var filteredSpecies: [Species] {
+        if let subcategory = selectedSubcategory {
+            return viewModel.species.filter { $0.subcategoryId == subcategory.id }
+        }
+        return viewModel.species
+    }
+
+    // MARK: - 加载子分类
+    private func loadSubcategories() async {
+        guard let cat = category else { return }
+        do {
+            subcategories = try await SubcategoryService.shared.getSubcategories(for: cat)
+        } catch {
+            print("加载子分类失败: \(error)")
+        }
+    }
 }
 
 // MARK: - 详细物种卡片（用于列表页）
@@ -665,82 +655,17 @@ struct DetailTabButton: View {
     }
 }
 
-// MARK: - 详情页属性卡片
-struct DetailAttributeCard: View {
-    let icon: String
-    let title: String
-    let value: String
-    var valueColor: Color = .white
+// MARK: - 详情页属性卡片 (使用 InfoCard 别名以保持兼容性)
+typealias DetailAttributeCard = InfoCard
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            HStack(spacing: Spacing.xs) {
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundColor(.gray)
-
-                Text(title)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundColor(.gray)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-            }
-            .padding(.bottom, 2)
-
-            Text(value)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(valueColor)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.xl)
-                .fill(Color.surfaceDark)
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.xl)
-                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
-                )
-        )
-    }
-}
-
-// MARK: - 珊瑚属性卡片（较小文字）
+// MARK: - 珊瑚属性卡片 (紧凑版 InfoCard)
 struct CoralAttributeCard: View {
     let icon: String
     let title: String
     let value: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            HStack(spacing: Spacing.xs) {
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundColor(.gray)
-
-                Text(title)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundColor(.gray)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-            }
-            .padding(.bottom, 2)
-
-            Text(value)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.xl)
-                .fill(Color.surfaceDark)
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.xl)
-                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
-                )
-        )
+        InfoCard(icon: icon, title: title, value: value, compact: true)
     }
 }
 
@@ -768,7 +693,7 @@ struct DetailWaterParameterCard: View {
     }
 }
 
-// MARK: - Tab按钮
+// MARK: - Tab按钮 (使用通用样式)
 struct TabButton: View {
     let title: String
     let isSelected: Bool
@@ -790,66 +715,11 @@ struct TabButton: View {
     }
 }
 
-// MARK: - 属性卡片
-struct AttributeCard: View {
-    let icon: String
-    let title: String
-    let value: String
-    var valueColor: Color = .white
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            HStack(spacing: Spacing.xs) {
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundColor(.textSecondaryDark)
-
-                Text(title)
-                    .font(.labelSmall)
-                    .foregroundColor(.textSecondaryDark)
-                    .textCase(.uppercase)
-            }
-
-            Text(value)
-                .font(.titleSmall)
-                .foregroundColor(valueColor)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.xl)
-                .fill(Color.surfaceDark)
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.xl)
-                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
-                )
-        )
-    }
-}
+// MARK: - 属性卡片 (使用 InfoCard 别名)
+typealias AttributeCard = InfoCard
 
 // MARK: - 水质参数卡片
-struct WaterParameterCard: View {
-    let title: String
-    let value: String
-
-    var body: some View {
-        VStack(spacing: Spacing.xs) {
-            Text(title)
-                .font(.labelSmall)
-                .foregroundColor(.textSecondaryDark)
-
-            Text(value)
-                .font(.titleSmall)
-                .foregroundColor(.reefPrimary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .fill(Color.surfaceDarkLight)
-        )
-    }
-}
+typealias WaterParameterCard = DetailWaterParameterCard
 
 // MARK: - 预览
 #Preview {

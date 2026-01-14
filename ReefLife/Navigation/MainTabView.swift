@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+// MARK: - TabBar 可见性控制
+class TabBarVisibility: ObservableObject {
+    @Published var isHidden: Bool = false
+}
+
 // MARK: - Tab枚举
 enum Tab: String, CaseIterable {
     case home = "首页"
@@ -36,6 +41,7 @@ enum Tab: String, CaseIterable {
 // MARK: - 主标签视图
 struct MainTabView: View {
     @State private var selectedTab: Tab = .home
+    @StateObject private var tabBarVisibility = TabBarVisibility()
 
     init() {
         // 隐藏原生 TabBar
@@ -59,9 +65,14 @@ struct MainTabView: View {
                     .tag(Tab.profile)
             }
 
-            // 自定义底部导航栏
-            CustomTabBar(selectedTab: $selectedTab)
+            // 自定义底部导航栏 - 根据状态显示/隐藏
+            if !tabBarVisibility.isHidden {
+                CustomTabBar(selectedTab: $selectedTab)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .environmentObject(tabBarVisibility)
+        .animation(.easeInOut(duration: 0.25), value: tabBarVisibility.isHidden)
     }
 }
 

@@ -20,12 +20,14 @@ final class CommunityViewModel: ObservableObject {
     @Published var channelPosts: [Post] = []
 
     @Published var isLoadingPosts = false
+    @Published var isLoadingMore = false
     @Published var isLoadingChannels = false
+    @Published var hasMorePosts = true
     @Published var error: Error?
 
     // MARK: - 分页
     private var currentPage = 1
-    private var hasMorePosts = true
+    private let pageSize = 20
 
     // MARK: - 服务
     private let postService = PostService.shared
@@ -68,8 +70,10 @@ final class CommunityViewModel: ObservableObject {
         defer { isLoadingPosts = false }
 
         do {
-            let posts = try await postService.getTrendingPosts(limit: 20)
+            let posts = try await postService.getTrendingPosts(page: 1, limit: pageSize)
             trendingPosts = posts
+            currentPage = 1
+            hasMorePosts = posts.count >= pageSize
         } catch {
             print("加载热门帖子失败: \(error)")
             self.error = error
@@ -86,8 +90,9 @@ final class CommunityViewModel: ObservableObject {
         defer { isLoadingPosts = false }
 
         do {
-            let posts = try await postService.getPosts(channelId: channelId, page: 1, limit: 20)
+            let posts = try await postService.getPosts(channelId: channelId, page: 1, limit: pageSize)
             channelPosts = posts
+            hasMorePosts = posts.count >= pageSize
         } catch {
             print("加载频道帖子失败: \(error)")
             self.error = error
@@ -96,18 +101,19 @@ final class CommunityViewModel: ObservableObject {
 
     // MARK: - 加载更多帖子
     func loadMorePosts() async {
-        guard hasMorePosts, !isLoadingPosts else { return }
+        guard hasMorePosts, !isLoadingMore, !isLoadingPosts else { return }
 
-        currentPage += 1
-        isLoadingPosts = true
-        defer { isLoadingPosts = false }
+        isLoadingMore = true
+        defer { isLoadingMore = false }
 
         do {
+            let nextPage = currentPage + 1
             let posts: [Post]
+
             if let channelId = selectedChannelId {
-                posts = try await postService.getPosts(channelId: channelId, page: currentPage, limit: 20)
+                posts = try await postService.getPosts(channelId: channelId, page: nextPage, limit: pageSize)
             } else {
-                posts = try await postService.getTrendingPosts(limit: 20)
+                posts = try await postService.getTrendingPosts(page: nextPage, limit: pageSize)
             }
 
             if posts.isEmpty {
@@ -118,6 +124,8 @@ final class CommunityViewModel: ObservableObject {
                 } else {
                     trendingPosts.append(contentsOf: posts)
                 }
+                currentPage = nextPage
+                hasMorePosts = posts.count >= pageSize
             }
         } catch {
             print("加载更多帖子失败: \(error)")
@@ -134,6 +142,19 @@ final class CommunityViewModel: ObservableObject {
             await loadChannelPosts(channelId: channelId)
         } else {
             await loadTrendingPosts()
+        }
+    }
+
+    // MARK: - 加载状态
+    var loadMoreState: LoadMoreState {
+        if isLoadingMore {
+            return .loading
+        } else if !hasMorePosts {
+            return .noMore
+        } else if let error = error {
+            return .error(error.localizedDescription)
+        } else {
+            return .idle
         }
     }
 
@@ -248,10 +269,10 @@ final class PostDetailViewModel: ObservableObject {
         }
     }
 
-    func submitComment(content: String) async {
+    func submitComment(content: String, parentId: String? = nil) async {
         let dto = CreateCommentDTO(
             postId: post.id,
-            parentId: nil,
+            parentId: parentId,
             content: content
         )
 
@@ -350,6 +371,61 @@ final class CreatePostViewModel: ObservableObject {
         } catch {
             print("发帖失败: \(error)")
             self.error = error
+        }
+    }
+}
+
+// MARK: - 搜索 ViewModel
+@MainActor
+final class SearchViewModel: ObservableObject {
+    @Published var searchResults: [Post] = []
+    @Published var isLoading = false
+    @Published var error: Error?
+    @Published var hasMoreResults = true
+
+    private let postService = PostService.shared
+    private var currentQuery = ""
+    private var currentPage = 1
+    private let pageSize = 20
+
+    func search(query: String) async {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            searchResults = []
+            return
+        }
+
+        currentQuery = query
+        currentPage = 1
+        hasMoreResults = true
+
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let results = try await postService.searchPosts(query: query, page: 1, limit: pageSize)
+            searchResults = results
+            hasMoreResults = results.count == pageSize
+        } catch {
+            print("搜索失败: \(error)")
+            self.error = error
+        }
+    }
+
+    func loadMore() async {
+        guard !isLoading && hasMoreResults && !currentQuery.isEmpty else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        currentPage += 1
+
+        do {
+            let results = try await postService.searchPosts(query: currentQuery, page: currentPage, limit: pageSize)
+            searchResults.append(contentsOf: results)
+            hasMoreResults = results.count == pageSize
+        } catch {
+            print("加载更多失败: \(error)")
+            currentPage -= 1
         }
     }
 }

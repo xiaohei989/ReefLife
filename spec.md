@@ -1,6 +1,6 @@
 # ReefLife 产品规格说明书
 
-> 最后更新: 2026-01-05
+> 最后更新: 2026-01-14
 
 ## 1. 项目概述
 
@@ -47,10 +47,11 @@ ReefLife 是一款面向海水缸爱好者的社区应用，集社区交流、�
 | 最新热帖 | ✅ UI完成 | 帖子列表展示 |
 | 通知入口 | ✅ UI完成 | 右上角铃铛图标 |
 
-**待开发:**
-- [ ] 搜索功能实现
-- [ ] 数据接口对接
-- [ ] 下拉刷新/上拉加载
+**已完成:**
+- [x] 搜索功能实现（SearchResultsView + SearchViewModel）
+- [x] 数据接口对接（HomeViewModel + PostService）
+- [x] 下拉刷新/上拉加载（PaginationManager 分页管理）
+- [x] 自动加载更多（滚动到底部触发）
 
 ### 3.2 社区 (Community)
 | 功能 | 状态 | 说明 |
@@ -61,13 +62,17 @@ ReefLife 是一款面向海水缸爱好者的社区应用，集社区交流、�
 | 发帖入口 | ✅ UI完成 | 右下角悬浮按钮 |
 | 频道详情 | ✅ UI完成 | 频道页面和筛选 |
 
+**已完成:**
+- [x] 发帖功能（CreatePostView + CreatePostViewModel，支持文字+图片+选择频道+标签）
+- [x] 评论功能（评论提交、点赞、嵌套回复）
+- [x] 点赞/踩功能（PostDetailView 投票交互）
+- [x] 收藏功能（书签按钮交互）
+- [x] 数据接口对接（CommunityViewModel + PostService + CommentService）
+- [x] 下拉刷新/上拉加载（社区页和频道详情页）
+- [x] 自动分页加载（统一的分页管理机制）
+
 **待开发:**
-- [ ] 发帖功能（文字+图片+选择频道）
-- [ ] 评论功能
-- [ ] 点赞/踩功能
-- [ ] 收藏功能
 - [ ] 举报/屏蔽功能
-- [ ] 数据接口对接
 
 ### 3.3 物种百科 (Encyclopedia)
 | 功能 | 状态 | 说明 |
@@ -99,11 +104,14 @@ ReefLife 是一款面向海水缸爱好者的社区应用，集社区交流、�
 | 我的活动 | ✅ UI完成 | 动态时间线 |
 | 设置入口 | ✅ UI完成 | 右上角齿轮图标 |
 
+**已完成:**
+- [x] 登录/注册页面（LoginView, RegisterView, PhoneLoginView）
+- [x] 设置页面（SettingsView）
+- [x] 登出功能
+
 **待开发:**
-- [ ] 登录/注册页面
-- [ ] 编辑资料功能
-- [ ] 设置页面
-- [ ] 数据接口对接
+- [ ] 编辑资料功能（图片上传）
+- [ ] 数据接口对接（用户信息同步）
 
 ### 3.5 二手交易 (Trade) - 新模块
 | 功能 | 状态 | 说明 |
@@ -182,19 +190,24 @@ products (
 - [x] 个人中心 UI
 - [x] 自定义 TabBar（带动画）
 
-### 5.2 进行中 (Phase 2 - 后端接入)
-- [ ] Supabase 项目配置
-- [ ] 数据库表创建
-- [ ] Auth 认证集成
-- [ ] 图片上传 (R2)
+### 5.2 已完成 (Phase 2 - 后端接入)
+- [x] Supabase 项目配置
+- [x] 数据库表创建（users, posts, comments, channels, species, bookmarks, post_votes）
+- [x] 图片上传 (Cloudflare R2 + MediaService)
+- [x] 数据服务层（SupabaseService, PostService, CommentService, ChannelService, SpeciesService）
 
-### 5.3 待开发 (Phase 3 - 核心功能)
-- [ ] 用户注册/登录
-- [ ] 发帖功能
-- [ ] 评论功能
-- [ ] 点赞/收藏功能
+### 5.3 已完成 (Phase 3 - 核心功能)
+- [x] 发帖功能（CreatePostView + CreatePostViewModel）
+- [x] 评论功能（评论提交、点赞、嵌套回复）
+- [x] 点赞/收藏功能（投票、书签完整交互）
+- [x] 搜索功能（SearchResultsView + SearchViewModel）
 
-### 5.4 未来计划 (Phase 4 - 扩展功能)
+### 5.4 已完成 (Phase 3.5 - 用户系统)
+- [x] 用户注册/登录（LoginView, RegisterView, PhoneLoginView）
+- [x] Auth 认证集成（AuthService, AuthViewModel, AppState）
+- [x] 登出功能（SettingsView 退出登录）
+
+### 5.5 未来计划 (Phase 4 - 扩展功能)
 - [ ] 二手交易模块
 - [ ] AI物种识别
 - [ ] 推送通知
@@ -230,15 +243,26 @@ ReefLife/
 │   │       ├── SpeciesCard.swift
 │   │       ├── PostCard.swift
 │   │       └── AvatarView.swift
-│   └── Extensions/          # 待创建
+│   └── Extensions/
+│       └── View+Extensions.swift
 ├── Features/
 │   ├── Home/
-│   │   └── HomeView.swift
+│   │   ├── HomeView.swift
+│   │   └── HomeViewModel.swift
+│   ├── Auth/
+│   │   ├── AuthViewModel.swift          # 认证状态管理
+│   │   ├── LoginView.swift              # 登录页面
+│   │   ├── RegisterView.swift           # 注册页面
+│   │   └── PhoneLoginView.swift         # 手机号登录
 │   ├── Community/
-│   │   ├── CommunityHomeView.swift
-│   │   └── ChannelDetailView.swift
+│   │   ├── CommunityHomeView.swift      # 包含 PostDetailView, SearchResultsView
+│   │   ├── CommunityViewModel.swift     # 包含多个 ViewModel
+│   │   ├── CreatePostView.swift         # 发帖页面
+│   │   ├── ChannelDetailView.swift
+│   │   └── ChannelListView.swift
 │   ├── Encyclopedia/
-│   │   └── EncyclopediaHomeView.swift
+│   │   ├── EncyclopediaHomeView.swift
+│   │   └── EncyclopediaViewModel.swift
 │   ├── Profile/
 │   │   └── ProfileView.swift
 │   └── Trade/               # 待创建
@@ -250,10 +274,14 @@ ReefLife/
 │   └── Species.swift
 ├── Navigation/
 │   └── MainTabView.swift
-├── Services/                # 待创建
+├── Services/
 │   ├── SupabaseService.swift
 │   ├── AuthService.swift
-│   └── StorageService.swift
+│   ├── PostService.swift
+│   ├── CommentService.swift
+│   ├── ChannelService.swift
+│   ├── SpeciesService.swift
+│   └── MediaService.swift
 └── Resources/
     └── Assets.xcassets/
 ```

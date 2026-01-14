@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 @MainActor
 final class ProfileViewModel: ObservableObject {
@@ -102,6 +103,104 @@ final class ProfileViewModel: ObservableObject {
         } catch {
             print("登出失败: \(error)")
             self.error = error
+        }
+    }
+}
+
+// MARK: - 编辑资料 ViewModel
+
+@MainActor
+final class EditProfileViewModel: ObservableObject {
+    @Published var username = ""
+    @Published var bio = ""
+    @Published var avatarURL = ""
+    @Published var selectedImage: UIImage?
+    @Published var isSaving = false
+    @Published var errorMessage: String?
+
+    private let authService: AuthService
+    private let mediaService: MediaService
+
+    private var initialUsername = ""
+    private var initialBio = ""
+    private var initialAvatarURL = ""
+
+    init(authService: AuthService = .shared, mediaService: MediaService = .shared) {
+        self.authService = authService
+        self.mediaService = mediaService
+        loadFromUser()
+    }
+
+    func loadFromUser() {
+        guard let user = authService.user else { return }
+        username = user.username
+        bio = user.bio
+        avatarURL = user.avatarURL
+        initialUsername = user.username
+        initialBio = user.bio
+        initialAvatarURL = user.avatarURL
+    }
+
+    var hasChanges: Bool {
+        let trimmedName = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedBio = bio.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName != initialUsername || trimmedBio != initialBio || selectedImage != nil
+    }
+
+    func save() async {
+        guard !isSaving else { return }
+        guard hasChanges else { return }
+
+        let trimmedName = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedBio = bio.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        do {
+            errorMessage = nil
+            isSaving = true
+            defer { isSaving = false }
+
+            if trimmedName != initialUsername {
+                try validateUsername(trimmedName)
+            }
+
+            var avatarUrl: String?
+            if let image = selectedImage {
+                // 使用 ImageProcessor 处理图片
+                let processedImageData = try await ImageProcessor.shared.processForAvatar(image)
+
+                // 将处理后的数据转换为 UIImage 用于上传
+                guard let processedImage = UIImage(data: processedImageData) else {
+                    throw ImageProcessingError.compressionFailed
+                }
+
+                avatarUrl = try await mediaService.uploadImage(processedImage, bucket: .avatars)
+            }
+
+            let dto = UpdateUserDTO(
+                username: trimmedName != initialUsername ? trimmedName : nil,
+                avatarUrl: avatarUrl,
+                title: nil,
+                bio: trimmedBio != initialBio ? trimmedBio : nil
+            )
+
+            _ = try await authService.updateProfile(dto)
+            selectedImage = nil
+            loadFromUser()
+        } catch {
+            errorMessage = ErrorHandler.shared.getUserMessage(for: error)
+            ErrorHandler.shared.log(error, context: "EditProfileViewModel.save")
+        }
+    }
+
+    private func validateUsername(_ username: String) throws {
+        guard username.count >= 2 && username.count <= 20 else {
+            throw ValidationError.invalidUsername
+        }
+
+        let usernameRegex = "^[a-zA-Z0-9_\\u4e00-\\u9fa5]+$"
+        let usernamePredicate = NSPredicate(format: "SELF MATCHES %@", usernameRegex)
+        guard usernamePredicate.evaluate(with: username) else {
+            throw ValidationError.invalidUsernameCharacters
         }
     }
 }

@@ -26,6 +26,7 @@ struct Species: Identifiable, Codable, Hashable {
     let description: String         // 描述
     let imageURLs: [String]         // 图片URL列表
     let origin: String              // 产地
+    let subcategoryId: String?      // 子分类ID
 
     // MARK: - 珊瑚特有属性
     let lightRequirement: String?   // 光照需求，如 "强光 (PAR 250-350)"
@@ -52,6 +53,7 @@ struct Species: Identifiable, Codable, Hashable {
         description: String,
         imageURLs: [String],
         origin: String,
+        subcategoryId: String? = nil,
         // 珊瑚特有属性（可选）
         lightRequirement: String? = nil,
         flowRequirement: String? = nil,
@@ -75,6 +77,7 @@ struct Species: Identifiable, Codable, Hashable {
         self.description = description
         self.imageURLs = imageURLs
         self.origin = origin
+        self.subcategoryId = subcategoryId
         // 珊瑚特有属性
         self.lightRequirement = lightRequirement
         self.flowRequirement = flowRequirement

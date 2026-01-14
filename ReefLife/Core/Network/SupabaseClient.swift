@@ -58,32 +58,7 @@ final class SupabaseClientManager {
     }
 }
 
-// MARK: - 网络错误定义
-enum NetworkError: LocalizedError {
-    case unauthorized
-    case notFound
-    case serverError(String)
-    case networkUnavailable
-    case decodingError
-    case unknown
-
-    var errorDescription: String? {
-        switch self {
-        case .unauthorized:
-            return "请先登录"
-        case .notFound:
-            return "请求的资源不存在"
-        case .serverError(let message):
-            return "服务器错误: \(message)"
-        case .networkUnavailable:
-            return "网络不可用，请检查网络连接"
-        case .decodingError:
-            return "数据解析错误"
-        case .unknown:
-            return "未知错误"
-        }
-    }
-}
+// NetworkError 已在 ErrorHandler.swift 中定义
 
 // MARK: - AnyCodable 辅助类型
 /// 用于处理 JSONB 字段的动态类型

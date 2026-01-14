@@ -18,6 +18,20 @@ enum AppConfig {
     /// Supabase Anon Key (公开密钥)
     static let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3ZXFhYmZqZnFsaGFvb21sa3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MDQzMDcsImV4cCI6MjA4MzE4MDMwN30.PYNqo0to3sHquv0dMNMaa62EPl_XLYiExh7cDiQOWlk"
 
+    /// OAuth 回调地址（需在 Supabase Auth 配置允许）
+    static let authRedirectURL = URL(string: "reeflife://auth-callback")!
+
+    // MARK: - 微信登录配置
+
+    /// 微信 AppID（形如 wx123...）
+    static let wechatAppId = "wxYOUR_APP_ID"
+
+    /// 微信 AppSecret（建议放在服务端，不要在客户端存真实值）
+    static let wechatAppSecret = "YOUR_WECHAT_APP_SECRET"
+
+    /// 微信 Universal Link（需在微信开放平台配置）
+    static let wechatUniversalLink = "https://example.com/app/"
+
     // MARK: - Cloudflare R2 配置
 
     /// R2 账户 ID

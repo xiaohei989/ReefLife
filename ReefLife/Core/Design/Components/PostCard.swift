@@ -105,19 +105,7 @@ struct CommunityPostCard: View {
                 HStack {
                     HStack(spacing: Spacing.md) {
                         // 头像
-                        AsyncImage(url: URL(string: post.authorAvatar)) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            default:
-                                Circle()
-                                    .fill(Color.surfaceDarkLight)
-                            }
-                        }
-                        .frame(width: Size.avatarMedium, height: Size.avatarMedium)
-                        .clipShape(Circle())
+                        AvatarImageView(url: post.authorAvatar, size: Size.avatarMedium)
 
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: Spacing.xs) {

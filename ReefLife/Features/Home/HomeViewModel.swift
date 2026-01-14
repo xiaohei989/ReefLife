@@ -10,37 +10,54 @@ import Combine
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    // MARK: - 发布的属性
-    @Published var trendingPosts: [Post] = []
-    @Published var isLoading = false
-    @Published var error: Error?
+    // MARK: - 分页管理器
+    @Published var postsPagination: PaginationManager<Post>
 
     // MARK: - 服务
     private let postService = PostService.shared
 
     // MARK: - 初始化
     init() {
+        // 创建分页管理器
+        self.postsPagination = PaginationManager { [weak postService] page, limit in
+            guard let postService = postService else { return [] }
+            return try await postService.getTrendingPosts(page: page, limit: limit)
+        }
+
         Task {
-            await loadTrendingPosts()
+            await postsPagination.initialLoad()
         }
     }
 
-    // MARK: - 加载热门帖子
-    func loadTrendingPosts() async {
-        isLoading = true
-        defer { isLoading = false }
+    // MARK: - 便利属性
+    var trendingPosts: [Post] {
+        postsPagination.items
+    }
 
-        do {
-            let posts = try await postService.getTrendingPosts(limit: 20)
-            trendingPosts = posts
-        } catch {
-            print("加载热门帖子失败: \(error)")
-            self.error = error
-        }
+    var isLoading: Bool {
+        postsPagination.state == .loading
+    }
+
+    var isLoadingMore: Bool {
+        postsPagination.state == .loadingMore
+    }
+
+    var hasMorePosts: Bool {
+        postsPagination.hasMore
     }
 
     // MARK: - 刷新
     func refresh() async {
-        await loadTrendingPosts()
+        await postsPagination.refresh()
+    }
+
+    // MARK: - 加载更多
+    func loadMore() async {
+        await postsPagination.loadMore()
+    }
+
+    // MARK: - 检查是否需要加载更多
+    func loadMoreIfNeeded(currentPost post: Post) async {
+        await postsPagination.loadMoreIfNeeded(currentItem: post)
     }
 }

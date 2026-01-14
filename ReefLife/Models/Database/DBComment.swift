@@ -41,21 +41,26 @@ struct DBCommentDetail: Codable {
     let authorId: String
     let parentId: String?
     let content: String
-    let likes: Int
-    let replyCount: Int
-    let depth: Int
-    let createdAt: Date
-    let authorName: String
+    let likes: Int?
+    let replyCount: Int?
+    let isDeleted: Bool?  // 添加缺失字段
+    let createdAt: Date?
+    let updatedAt: Date?  // 添加缺失字段
+    let depth: Int?
+    let path: [String]?  // 添加缺失字段
+    let authorName: String?
     let authorAvatar: String?
     let authorTitle: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, content, likes, depth
+        case id, content, likes, depth, path
         case postId = "post_id"
         case authorId = "author_id"
         case parentId = "parent_id"
         case replyCount = "reply_count"
+        case isDeleted = "is_deleted"
         case createdAt = "created_at"
+        case updatedAt = "updated_at"
         case authorName = "author_name"
         case authorAvatar = "author_avatar"
         case authorTitle = "author_title"
@@ -67,11 +72,11 @@ struct DBCommentDetail: Codable {
             id: id,
             postId: postId,
             authorId: authorId,
-            authorName: authorName,
+            authorName: authorName ?? "未知用户",
             authorAvatar: authorAvatar ?? "",
             content: content,
-            likes: likes,
-            createdAt: createdAt,
+            likes: likes ?? 0,
+            createdAt: createdAt ?? Date(),
             replies: replies
         )
     }

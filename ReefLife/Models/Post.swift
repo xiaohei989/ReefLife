@@ -95,6 +95,10 @@ enum PostTag: String, Codable, CaseIterable {
     var backgroundColor: Color {
         color.opacity(0.2)
     }
+
+    var displayName: String {
+        rawValue
+    }
 }
 
 // MARK: - 示例数据

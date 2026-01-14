@@ -7,7 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0FDCEAB4528A7454865AA98C /* PhoneLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF4F208F11EE310472A71F7 /* PhoneLoginView.swift */; };
+		4CC4E27251C4FEDF5354B452 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0D8DBE8E8D92DFCB06EEE3 /* AuthViewModel.swift */; };
 		505B99464986723027FBD983 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D8ED2B3B8676A45B85A5C0 /* HomeViewModel.swift */; };
+		6CE31E5765F4AB3FE0FFCD7B /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E4BDC8086E847547B61C14 /* ToastView.swift */; };
+		93DB71CC07282DFA7051FD50 /* Pods_ReefLife.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2248733141A84FB783153BE7 /* Pods_ReefLife.framework */; };
+		A6DD85BB4CFDF5A36E9543F2 /* LoadMoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DE4EDB62EF3A217A18B0CDC /* LoadMoreView.swift */; };
+		B17380CA4C32D87FA44B5EFD /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6BE7B708FEB405DF6415389 /* LoginView.swift */; };
 		E10000010000000000000001 /* ReefLifeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000001 /* ReefLifeApp.swift */; };
 		E10000010000000000000002 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000002 /* Colors.swift */; };
 		E10000010000000000000003 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000003 /* Typography.swift */; };
@@ -48,14 +54,34 @@
 		E10000010000000000000116 /* CreateCommentDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000116 /* CreateCommentDTO.swift */; };
 		E10000010000000000000117 /* UpdateUserDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000117 /* UpdateUserDTO.swift */; };
 		E10000010000000000000118 /* CommunityViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000118 /* CommunityViewModel.swift */; };
+		E10000010000000000000201 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000201 /* AppDelegate.swift */; };
+		E10000010000000000000202 /* WeChatAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000202 /* WeChatAuthService.swift */; };
+		E10000010000000000000300 /* Subcategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000300 /* Subcategory.swift */; };
+		E10000010000000000000301 /* DBSubcategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000301 /* DBSubcategory.swift */; };
+		E10000010000000000000302 /* SubcategoryPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000302 /* SubcategoryPicker.swift */; };
+		E10000010000000000000303 /* SubcategoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000303 /* SubcategoryService.swift */; };
 		E1SUPABASE000000000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E1SUPABASE000000000002 /* Supabase */; };
 		E2E30E2FC7373EB4C519F32F /* EncyclopediaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D721817E4564ECACDBF94F1B /* EncyclopediaViewModel.swift */; };
+		E7745A06A1864F0E628A252B /* CreatePostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3203EFC93A251BEBB3592DCF /* CreatePostView.swift */; };
+		EF91E01D2F1783F500EACA9C /* ImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF91E01B2F1783F500EACA9C /* ImageProcessor.swift */; };
+		EF91E01E2F1783F500EACA9C /* PaginationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF91E01C2F1783F500EACA9C /* PaginationManager.swift */; };
+		EF91E01F2F1783F500EACA9C /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF91E01A2F1783F500EACA9C /* ErrorHandler.swift */; };
+		F6D4CE1C4D30D4470239857E /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAFF4628ED18006CD89A7C50 /* RegisterView.swift */; };
 		FF12B1D0457AB57AD613399C /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5BB390B527F262D4DBDE859 /* ProfileViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2248733141A84FB783153BE7 /* Pods_ReefLife.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ReefLife.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3203EFC93A251BEBB3592DCF /* CreatePostView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreatePostView.swift; sourceTree = "<group>"; };
+		3DE4EDB62EF3A217A18B0CDC /* LoadMoreView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoadMoreView.swift; sourceTree = "<group>"; };
+		4E0D8DBE8E8D92DFCB06EEE3 /* AuthViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		541F1CCE2380BB7446385D08 /* Pods-ReefLife.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReefLife.release.xcconfig"; path = "Target Support Files/Pods-ReefLife/Pods-ReefLife.release.xcconfig"; sourceTree = "<group>"; };
+		59F13187BF6E0762284F0A13 /* Pods-ReefLife.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReefLife.debug.xcconfig"; path = "Target Support Files/Pods-ReefLife/Pods-ReefLife.debug.xcconfig"; sourceTree = "<group>"; };
 		66D8ED2B3B8676A45B85A5C0 /* HomeViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		7BF4F208F11EE310472A71F7 /* PhoneLoginView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhoneLoginView.swift; sourceTree = "<group>"; };
+		CAFF4628ED18006CD89A7C50 /* RegisterView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
 		D5BB390B527F262D4DBDE859 /* ProfileViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
+		D6E4BDC8086E847547B61C14 /* ToastView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		D721817E4564ECACDBF94F1B /* EncyclopediaViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EncyclopediaViewModel.swift; sourceTree = "<group>"; };
 		E10000020000000000000001 /* ReefLifeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReefLifeApp.swift; sourceTree = "<group>"; };
 		E10000020000000000000002 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
@@ -97,7 +123,18 @@
 		E10000020000000000000116 /* CreateCommentDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCommentDTO.swift; sourceTree = "<group>"; };
 		E10000020000000000000117 /* UpdateUserDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateUserDTO.swift; sourceTree = "<group>"; };
 		E10000020000000000000118 /* CommunityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityViewModel.swift; sourceTree = "<group>"; };
+		E10000020000000000000200 /* ReefLife.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ReefLife.entitlements; sourceTree = "<group>"; };
+		E10000020000000000000201 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		E10000020000000000000202 /* WeChatAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeChatAuthService.swift; sourceTree = "<group>"; };
+		E10000020000000000000300 /* Subcategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subcategory.swift; sourceTree = "<group>"; };
+		E10000020000000000000301 /* DBSubcategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBSubcategory.swift; sourceTree = "<group>"; };
+		E10000020000000000000302 /* SubcategoryPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubcategoryPicker.swift; sourceTree = "<group>"; };
+		E10000020000000000000303 /* SubcategoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubcategoryService.swift; sourceTree = "<group>"; };
 		E10000030000000000000000 /* ReefLife.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReefLife.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF91E01A2F1783F500EACA9C /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ErrorHandler.swift; path = ReefLife/Core/Utilities/ErrorHandler.swift; sourceTree = SOURCE_ROOT; };
+		EF91E01B2F1783F500EACA9C /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImageProcessor.swift; path = ReefLife/Core/Utilities/ImageProcessor.swift; sourceTree = SOURCE_ROOT; };
+		EF91E01C2F1783F500EACA9C /* PaginationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PaginationManager.swift; path = ReefLife/Core/Utilities/PaginationManager.swift; sourceTree = SOURCE_ROOT; };
+		F6BE7B708FEB405DF6415389 /* LoginView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,23 +143,66 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1SUPABASE000000000001 /* Supabase in Frameworks */,
+				93DB71CC07282DFA7051FD50 /* Pods_ReefLife.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3FAF856B91AF74481D9D026A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2248733141A84FB783153BE7 /* Pods_ReefLife.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		92D2EC1F0F46B56843E31EF4 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				4E0D8DBE8E8D92DFCB06EEE3 /* AuthViewModel.swift */,
+				F6BE7B708FEB405DF6415389 /* LoginView.swift */,
+				CAFF4628ED18006CD89A7C50 /* RegisterView.swift */,
+				7BF4F208F11EE310472A71F7 /* PhoneLoginView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		96E600339D088C831F6157F3 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				59F13187BF6E0762284F0A13 /* Pods-ReefLife.debug.xcconfig */,
+				541F1CCE2380BB7446385D08 /* Pods-ReefLife.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		AD0251A764183FE01A2A538E /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				EF91E01A2F1783F500EACA9C /* ErrorHandler.swift */,
+				EF91E01B2F1783F500EACA9C /* ImageProcessor.swift */,
+				EF91E01C2F1783F500EACA9C /* PaginationManager.swift */,
+			);
+			name = Utilities;
+			path = Core/Utilities;
+			sourceTree = "<group>";
+		};
 		E10000050000000000000000 = {
 			isa = PBXGroup;
 			children = (
 				E10000060000000000000000 /* ReefLife */,
 				E10000070000000000000000 /* Products */,
+				96E600339D088C831F6157F3 /* Pods */,
+				3FAF856B91AF74481D9D026A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		E10000060000000000000000 /* ReefLife */ = {
 			isa = PBXGroup;
 			children = (
+				E10000020000000000000200 /* ReefLife.entitlements */,
 				E10000080000000000000000 /* App */,
 				E10000200000000000000000 /* Config */,
 				E10000090000000000000000 /* Core */,
@@ -145,6 +225,7 @@
 		E10000080000000000000000 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E10000020000000000000201 /* AppDelegate.swift */,
 				E10000020000000000000001 /* ReefLifeApp.swift */,
 			);
 			path = App;
@@ -156,6 +237,7 @@
 				E100000E0000000000000000 /* Design */,
 				E10000210000000000000000 /* Network */,
 				E10000220000000000000000 /* Services */,
+				AD0251A764183FE01A2A538E /* Utilities */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -164,6 +246,7 @@
 			isa = PBXGroup;
 			children = (
 				E10000020000000000000010 /* Species.swift */,
+				E10000020000000000000300 /* Subcategory.swift */,
 				E10000020000000000000011 /* Post.swift */,
 				E10000020000000000000012 /* User.swift */,
 				E10000020000000000000013 /* Comment.swift */,
@@ -189,6 +272,7 @@
 				E10000110000000000000000 /* Encyclopedia */,
 				E10000120000000000000000 /* Community */,
 				E10000130000000000000000 /* Profile */,
+				92D2EC1F0F46B56843E31EF4 /* Auth */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -220,6 +304,9 @@
 				E10000020000000000000007 /* SpeciesCard.swift */,
 				E10000020000000000000008 /* PostCard.swift */,
 				E10000020000000000000009 /* AvatarView.swift */,
+				E10000020000000000000302 /* SubcategoryPicker.swift */,
+				3DE4EDB62EF3A217A18B0CDC /* LoadMoreView.swift */,
+				D6E4BDC8086E847547B61C14 /* ToastView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -248,6 +335,7 @@
 				E10000020000000000000018 /* CommunityHomeView.swift */,
 				E10000020000000000000118 /* CommunityViewModel.swift */,
 				E10000020000000000000021 /* ChannelDetailView.swift */,
+				3203EFC93A251BEBB3592DCF /* CreatePostView.swift */,
 			);
 			path = Community;
 			sourceTree = "<group>";
@@ -281,10 +369,12 @@
 			isa = PBXGroup;
 			children = (
 				E10000020000000000000102 /* AuthService.swift */,
+				E10000020000000000000202 /* WeChatAuthService.swift */,
 				E10000020000000000000103 /* PostService.swift */,
 				E10000020000000000000104 /* CommentService.swift */,
 				E10000020000000000000105 /* ChannelService.swift */,
 				E10000020000000000000106 /* SpeciesService.swift */,
+				E10000020000000000000303 /* SubcategoryService.swift */,
 				E10000020000000000000107 /* MediaService.swift */,
 				E10000020000000000000108 /* RealtimeService.swift */,
 			);
@@ -299,6 +389,7 @@
 				E10000020000000000000111 /* DBComment.swift */,
 				E10000020000000000000112 /* DBChannel.swift */,
 				E10000020000000000000113 /* DBSpecies.swift */,
+				E10000020000000000000301 /* DBSubcategory.swift */,
 				E10000020000000000000114 /* DBNotification.swift */,
 			);
 			path = Database;
@@ -321,6 +412,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = E10000150000000000000000 /* Build configuration list for PBXNativeTarget "ReefLife" */;
 			buildPhases = (
+				CC4B543F1F904ADD82C4F06E /* [CP] Check Pods Manifest.lock */,
 				E10000160000000000000000 /* Sources */,
 				E10000040000000000000000 /* Frameworks */,
 				E10000170000000000000000 /* Resources */,
@@ -385,12 +477,38 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		CC4B543F1F904ADD82C4F06E /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ReefLife-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		E10000160000000000000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				E10000010000000000000001 /* ReefLifeApp.swift in Sources */,
+				E10000010000000000000201 /* AppDelegate.swift in Sources */,
 				E10000010000000000000002 /* Colors.swift in Sources */,
 				E10000010000000000000003 /* Typography.swift in Sources */,
 				E10000010000000000000004 /* Spacing.swift in Sources */,
@@ -400,6 +518,10 @@
 				E10000010000000000000008 /* PostCard.swift in Sources */,
 				E10000010000000000000009 /* AvatarView.swift in Sources */,
 				E10000010000000000000010 /* Species.swift in Sources */,
+				E10000010000000000000300 /* Subcategory.swift in Sources */,
+				E10000010000000000000301 /* DBSubcategory.swift in Sources */,
+				E10000010000000000000302 /* SubcategoryPicker.swift in Sources */,
+				E10000010000000000000303 /* SubcategoryService.swift in Sources */,
 				E10000010000000000000011 /* Post.swift in Sources */,
 				E10000010000000000000012 /* User.swift in Sources */,
 				E10000010000000000000013 /* Comment.swift in Sources */,
@@ -411,6 +533,9 @@
 				E10000010000000000000118 /* CommunityViewModel.swift in Sources */,
 				E10000010000000000000021 /* ChannelDetailView.swift in Sources */,
 				E10000010000000000000019 /* ProfileView.swift in Sources */,
+				EF91E01D2F1783F500EACA9C /* ImageProcessor.swift in Sources */,
+				EF91E01E2F1783F500EACA9C /* PaginationManager.swift in Sources */,
+				EF91E01F2F1783F500EACA9C /* ErrorHandler.swift in Sources */,
 				E10000010000000000000100 /* Environment.swift in Sources */,
 				E10000010000000000000101 /* SupabaseClient.swift in Sources */,
 				E10000010000000000000102 /* AuthService.swift in Sources */,
@@ -419,6 +544,7 @@
 				E10000010000000000000105 /* ChannelService.swift in Sources */,
 				E10000010000000000000106 /* SpeciesService.swift in Sources */,
 				E10000010000000000000107 /* MediaService.swift in Sources */,
+				E10000010000000000000202 /* WeChatAuthService.swift in Sources */,
 				E10000010000000000000108 /* RealtimeService.swift in Sources */,
 				E10000010000000000000109 /* DBUser.swift in Sources */,
 				E10000010000000000000110 /* DBPost.swift in Sources */,
@@ -432,6 +558,13 @@
 				505B99464986723027FBD983 /* HomeViewModel.swift in Sources */,
 				E2E30E2FC7373EB4C519F32F /* EncyclopediaViewModel.swift in Sources */,
 				FF12B1D0457AB57AD613399C /* ProfileViewModel.swift in Sources */,
+				E7745A06A1864F0E628A252B /* CreatePostView.swift in Sources */,
+				4CC4E27251C4FEDF5354B452 /* AuthViewModel.swift in Sources */,
+				B17380CA4C32D87FA44B5EFD /* LoginView.swift in Sources */,
+				F6D4CE1C4D30D4470239857E /* RegisterView.swift in Sources */,
+				0FDCEAB4528A7454865AA98C /* PhoneLoginView.swift in Sources */,
+				A6DD85BB4CFDF5A36E9543F2 /* LoadMoreView.swift in Sources */,
+				6CE31E5765F4AB3FE0FFCD7B /* ToastView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -559,16 +692,21 @@
 		};
 		E100001C0000000000000000 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 59F13187BF6E0762284F0A13 /* Pods-ReefLife.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ReefLife/ReefLife.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = ReefLife;
+				INFOPLIST_KEY_CFBundleURLTypes = "{\"CFBundleTypeRole\"=>\"Editor\", \"CFBundleURLSchemes\"=>[\"reeflife\", \"$(WECHAT_APP_ID)\"]}";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_LSApplicationQueriesSchemes = "weixin weixinULAPI";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "用于选择个人头像";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -584,21 +722,28 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WECHAT_APP_ID = wxYOUR_APP_ID;
+				WECHAT_UNIVERSAL_LINK_DOMAIN = example.com;
 			};
 			name = Debug;
 		};
 		E100001D0000000000000000 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 541F1CCE2380BB7446385D08 /* Pods-ReefLife.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ReefLife/ReefLife.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = ReefLife;
+				INFOPLIST_KEY_CFBundleURLTypes = "{\"CFBundleTypeRole\"=>\"Editor\", \"CFBundleURLSchemes\"=>[\"reeflife\", \"$(WECHAT_APP_ID)\"]}";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_LSApplicationQueriesSchemes = "weixin weixinULAPI";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "用于选择个人头像";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -614,6 +759,8 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WECHAT_APP_ID = wxYOUR_APP_ID;
+				WECHAT_UNIVERSAL_LINK_DOMAIN = example.com;
 			};
 			name = Release;
 		};

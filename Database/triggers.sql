@@ -339,7 +339,9 @@ SELECT
     p.*,
     u.username AS author_name,
     u.avatar_url AS author_avatar,
+    u.title AS author_title,
     ch.name AS channel_name,
+    ch.icon_name AS channel_icon,
     -- 热度评分算法
     (p.upvotes - p.downvotes) +
     (p.comment_count * 2) +

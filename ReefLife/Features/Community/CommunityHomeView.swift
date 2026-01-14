@@ -26,9 +26,7 @@ struct CommunityHomeView: View {
                     channelSection
 
                     // 分隔条
-                    Rectangle()
-                        .fill(colorScheme == .dark ? Color.black.opacity(0.3) : Color.gray.opacity(0.1))
-                        .frame(height: 8)
+                    SectionDivider()
 
                     // 热门帖子标题
                     HStack {
@@ -42,27 +40,12 @@ struct CommunityHomeView: View {
                     .padding(.bottom, Spacing.sm)
 
                     // 帖子列表
-                    if viewModel.isLoadingPosts && viewModel.trendingPosts.isEmpty {
-                        VStack(spacing: Spacing.md) {
-                            ProgressView()
-                            Text("加载中...")
-                                .font(.bodySmall)
-                                .foregroundColor(.textSecondaryDark)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.xl)
-                    } else if viewModel.trendingPosts.isEmpty {
-                        VStack(spacing: Spacing.md) {
-                            Image(systemName: "doc.text")
-                                .font(.system(size: 40))
-                                .foregroundColor(.textSecondaryDark)
-                            Text("暂无帖子")
-                                .font(.bodyMedium)
-                                .foregroundColor(.textSecondaryDark)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.xl)
-                    } else {
+                    ContentStateView(
+                        isLoading: viewModel.isLoadingPosts,
+                        isEmpty: viewModel.trendingPosts.isEmpty,
+                        emptyIcon: "doc.text",
+                        emptyMessage: "暂无帖子"
+                    ) {
                         LazyVStack(spacing: 0) {
                             ForEach(viewModel.trendingPosts) { post in
                                 NavigationLink(destination: PostDetailView(post: post)) {
@@ -70,10 +53,30 @@ struct CommunityHomeView: View {
                                 }
                                 .buttonStyle(.plain)
                             }
+
+                            // 加载更多触发器
+                            LoadMoreTrigger(
+                                isLoading: viewModel.isLoadingMore,
+                                hasMore: viewModel.hasMorePosts
+                            ) {
+                                Task {
+                                    await viewModel.loadMorePosts()
+                                }
+                            }
+
+                            // 加载更多状态显示
+                            LoadMoreView(state: viewModel.loadMoreState) {
+                                Task {
+                                    await viewModel.loadMorePosts()
+                                }
+                            }
                         }
                     }
                 }
                 .padding(.bottom, Size.tabBarHeight + Spacing.lg)
+            }
+            .refreshable {
+                await viewModel.refresh()
             }
             .background(Color.adaptiveBackground(for: colorScheme))
             .navigationBarTitleDisplayMode(.inline)
@@ -193,19 +196,7 @@ struct CommunityPostItem: View {
             HStack {
                 HStack(spacing: Spacing.md) {
                     // 头像
-                    AsyncImage(url: URL(string: post.authorAvatar)) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        default:
-                            Circle()
-                                .fill(Color.surfaceDarkLight)
-                        }
-                    }
-                    .frame(width: Size.avatarMedium, height: Size.avatarMedium)
-                    .clipShape(Circle())
+                    AvatarImageView(url: post.authorAvatar, size: Size.avatarMedium)
 
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: Spacing.xs) {
@@ -337,8 +328,13 @@ struct PostDetailView: View {
     @StateObject private var viewModel: PostDetailViewModel
     @State private var commentText = ""
     @State private var showScrollTitle = false
+    @State private var replyingTo: Comment? = nil  // 追踪正在回复的评论
+    @State private var replyParentId: String? = nil  // 实际的 parentId（顶级评论 ID）
+    @State private var showError = false  // 显示错误提示
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var tabBarVisibility: TabBarVisibility  // 控制 TabBar 显示
+    @FocusState private var isCommentInputFocused: Bool
 
     init(post: Post) {
         self.post = post
@@ -405,25 +401,29 @@ struct PostDetailView: View {
         }
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+        .onAppear {
+            tabBarVisibility.isHidden = true  // 进入详情页时隐藏 TabBar
+        }
+        .onDisappear {
+            tabBarVisibility.isHidden = false  // 离开详情页时显示 TabBar
+        }
+        .alert("提示", isPresented: $showError) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(viewModel.error?.localizedDescription ?? "操作失败")
+        }
+        .onChange(of: viewModel.error != nil) { hasError in
+            if hasError {
+                showError = true
+            }
+        }
     }
 
     // MARK: - 作者信息
     private var authorSection: some View {
         HStack {
             HStack(spacing: Spacing.md) {
-                AsyncImage(url: URL(string: post.authorAvatar)) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    default:
-                        Circle()
-                            .fill(Color.surfaceDarkLight)
-                    }
-                }
-                .frame(width: Size.avatarMedium, height: Size.avatarMedium)
-                .clipShape(Circle())
+                AvatarImageView(url: post.authorAvatar, size: Size.avatarMedium)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(post.authorName)
@@ -480,19 +480,23 @@ struct PostDetailView: View {
         HStack {
             // 投票
             HStack(spacing: Spacing.xs) {
-                Button(action: {}) {
+                Button(action: {
+                    Task { await viewModel.votePost(voteType: .up) }
+                }) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 18))
                         .foregroundColor(.textSecondaryDark)
                 }
                 .frame(width: 32, height: 32)
 
-                Text("\(post.upvotes)")
+                Text("\(viewModel.post.upvotes)")
                     .font(.labelMedium)
                     .fontWeight(.bold)
                     .foregroundColor(colorScheme == .dark ? .white : .black)
 
-                Button(action: {}) {
+                Button(action: {
+                    Task { await viewModel.votePost(voteType: .down) }
+                }) {
                     Image(systemName: "arrow.down")
                         .font(.system(size: 18))
                         .foregroundColor(.textSecondaryDark)
@@ -518,17 +522,19 @@ struct PostDetailView: View {
                     HStack(spacing: Spacing.xs) {
                         Image(systemName: "bubble.right")
                             .font(.system(size: 18))
-                        Text("\(post.commentCount)")
+                        Text("\(viewModel.comments.count)")
                             .font(.labelMedium)
                     }
                     .foregroundColor(.textSecondaryDark)
                 }
 
                 // 收藏
-                Button(action: {}) {
-                    Image(systemName: "bookmark")
+                Button(action: {
+                    Task { await viewModel.toggleBookmark() }
+                }) {
+                    Image(systemName: viewModel.post.isBookmarked ? "bookmark.fill" : "bookmark")
                         .font(.system(size: 18))
-                        .foregroundColor(.textSecondaryDark)
+                        .foregroundColor(viewModel.post.isBookmarked ? .reefPrimary : .textSecondaryDark)
                 }
 
                 // 分享
@@ -574,24 +580,24 @@ struct PostDetailView: View {
             .padding(.top, Spacing.lg)
 
             // 评论列表
-            if viewModel.isLoadingComments && viewModel.comments.isEmpty {
-                VStack(spacing: Spacing.md) {
-                    ProgressView()
-                    Text("加载评论中...")
-                        .font(.bodySmall)
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.lg)
-            } else if viewModel.comments.isEmpty {
-                Text("暂无评论，快来抢沙发吧~")
-                    .font(.bodyMedium)
-                    .foregroundColor(.textSecondaryDark)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.lg)
-            } else {
+            ContentStateView(
+                isLoading: viewModel.isLoadingComments,
+                isEmpty: viewModel.comments.isEmpty,
+                loadingMessage: "加载评论中...",
+                emptyIcon: "bubble.right",
+                emptyMessage: "暂无评论，快来抢沙发吧~"
+            ) {
                 ForEach(viewModel.comments) { comment in
-                    CommentItem(comment: comment, isOP: comment.authorName == post.authorName)
+                    CommentItem(
+                        comment: comment,
+                        isOP: comment.authorName == post.authorName,
+                        onLike: {
+                            Task { await viewModel.likeComment(comment) }
+                        },
+                        onReply: { targetComment, rootId in
+                            setReplyTarget(targetComment, rootId: rootId)
+                        }
+                    )
                 }
             }
         }
@@ -599,38 +605,69 @@ struct PostDetailView: View {
 
     // MARK: - 评论输入框
     private var commentInputBar: some View {
-        HStack(spacing: Spacing.md) {
-            Button(action: {}) {
-                Image(systemName: "photo.badge.plus")
-                    .font(.system(size: 20))
-                    .foregroundColor(.textSecondaryDark)
+        VStack(spacing: 0) {
+            // 回复提示条
+            if let replyTarget = replyingTo {
+                HStack {
+                    Text("回复 @\(replyTarget.authorName)")
+                        .font(.bodySmall)
+                        .foregroundColor(.textSecondaryDark)
+
+                    Spacer()
+
+                    Button(action: {
+                        replyingTo = nil
+                        replyParentId = nil  // 同时清除 parentId
+                        commentText = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.textSecondaryDark)
+                    }
+                }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
+                .background(colorScheme == .dark ? Color.surfaceDark : Color.surfaceLight)
             }
 
-            HStack {
-                TextField("添加评论...", text: $commentText)
-                    .font(.bodyMedium)
-                    .foregroundColor(colorScheme == .dark ? .white : .black)
-
+            HStack(spacing: Spacing.md) {
                 Button(action: {}) {
-                    Image(systemName: "paperplane.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.reefPrimary)
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 20))
+                        .foregroundColor(.textSecondaryDark)
                 }
+
+                HStack {
+                    TextField(replyingTo != nil ? "回复 @\(replyingTo!.authorName)..." : "添加评论...", text: $commentText)
+                        .font(.bodyMedium)
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .focused($isCommentInputFocused)
+                        .onSubmit {
+                            submitComment()
+                        }
+
+                    Button(action: submitComment) {
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(commentText.isEmpty ? .textSecondaryDark : .reefPrimary)
+                    }
+                    .disabled(commentText.isEmpty)
+                }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
+                .background(
+                    RoundedRectangle(cornerRadius: CornerRadius.xl)
+                        .fill(colorScheme == .dark ? Color.surfaceDark : Color.surfaceLight)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CornerRadius.xl)
+                                .stroke(colorScheme == .dark ? Color.borderDark : Color.borderLight, lineWidth: 1)
+                        )
+                )
             }
             .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
-            .background(
-                RoundedRectangle(cornerRadius: CornerRadius.xl)
-                    .fill(colorScheme == .dark ? Color.surfaceDark : Color.surfaceLight)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CornerRadius.xl)
-                            .stroke(colorScheme == .dark ? Color.borderDark : Color.borderLight, lineWidth: 1)
-                    )
-            )
+            .padding(.top, Spacing.md)
+            .padding(.bottom, Spacing.md)
         }
-        .padding(.horizontal, Spacing.md)
-        .padding(.top, Spacing.md)
-        .padding(.bottom, Spacing.md)
         .background(
             Rectangle()
                 .fill(Color.adaptiveBackground(for: colorScheme))
@@ -642,30 +679,65 @@ struct PostDetailView: View {
                 )
         )
     }
+
+    // MARK: - 提交评论
+    private func submitComment() {
+        guard !commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+
+        // 如果是回复，在内容前添加 @用户名
+        var content = commentText
+        if let replyTarget = replyingTo {
+            // 如果内容不是以 @用户名 开头，添加它
+            let mention = "@\(replyTarget.authorName) "
+            if !content.hasPrefix(mention) {
+                content = mention + content
+            }
+        }
+
+        let parentId = replyParentId  // 使用实际的顶级评论 ID
+        let contentToSubmit = content
+        let parentIdToSubmit = parentId
+
+        commentText = ""
+        replyingTo = nil
+        replyParentId = nil
+        isCommentInputFocused = false
+
+        Task {
+            await viewModel.submitComment(content: contentToSubmit, parentId: parentIdToSubmit)
+        }
+    }
+
+    // MARK: - 设置回复目标
+    /// - Parameters:
+    ///   - comment: 被回复的评论
+    ///   - rootId: 顶级评论的 ID（如果回复的是顶级评论，则为该评论自己的 ID）
+    private func setReplyTarget(_ comment: Comment, rootId: String) {
+        replyingTo = comment
+        replyParentId = rootId  // 设置实际的 parentId
+
+        // 延迟设置焦点，确保 UI 更新完成后再聚焦
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            isCommentInputFocused = true
+        }
+    }
 }
 
 // MARK: - 评论项
 struct CommentItem: View {
     let comment: Comment
     var isOP: Bool = false
+    var onLike: (() -> Void)? = nil
+    var onReply: ((Comment, String) -> Void)? = nil  // 传递 Comment 对象和顶级评论 ID
+    @State private var isLiked = false
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         HStack(alignment: .top, spacing: Spacing.md) {
             // 头像
-            AsyncImage(url: URL(string: comment.authorAvatar)) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                default:
-                    Circle()
-                        .fill(Color.surfaceDarkLight)
-                }
-            }
-            .frame(width: 32, height: 32)
-            .clipShape(Circle())
+            AvatarImageView(url: comment.authorAvatar, size: 32)
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 // 用户名和时间
@@ -700,17 +772,22 @@ struct CommentItem: View {
 
                 // 互动按钮
                 HStack(spacing: Spacing.lg) {
-                    Button(action: {}) {
+                    Button(action: {
+                        isLiked.toggle()
+                        onLike?()
+                    }) {
                         HStack(spacing: Spacing.xs) {
-                            Image(systemName: "heart")
+                            Image(systemName: isLiked ? "heart.fill" : "heart")
                                 .font(.system(size: 16))
-                            Text("\(comment.likes)")
+                            Text("\(comment.likes + (isLiked ? 1 : 0))")
                                 .font(.bodySmall)
                         }
-                        .foregroundColor(.textSecondaryDark)
+                        .foregroundColor(isLiked ? .red : .textSecondaryDark)
                     }
 
-                    Button(action: {}) {
+                    Button(action: {
+                        onReply?(comment, comment.id)
+                    }) {
                         HStack(spacing: Spacing.xs) {
                             Image(systemName: "bubble.right")
                                 .font(.system(size: 16))
@@ -726,7 +803,12 @@ struct CommentItem: View {
                 if !comment.replies.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.md) {
                         ForEach(comment.replies) { reply in
-                            ReplyItem(reply: reply, isOP: reply.authorName == comment.authorName)
+                            ReplyItem(
+                                reply: reply,
+                                rootCommentId: comment.id,  // 传递顶级评论 ID
+                                isOP: reply.authorName == comment.authorName,
+                                onReply: onReply
+                            )
                         }
                     }
                     .padding(.top, Spacing.md)
@@ -748,24 +830,14 @@ struct CommentItem: View {
 // MARK: - 回复项
 struct ReplyItem: View {
     let reply: Comment
+    let rootCommentId: String  // 顶级评论的 ID
     var isOP: Bool = false
+    var onReply: ((Comment, String) -> Void)? = nil  // 传递 Comment 对象和顶级评论 ID
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         HStack(alignment: .top, spacing: Spacing.sm) {
-            AsyncImage(url: URL(string: reply.authorAvatar)) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                default:
-                    Circle()
-                        .fill(Color.surfaceDarkLight)
-                }
-            }
-            .frame(width: 24, height: 24)
-            .clipShape(Circle())
+            AvatarImageView(url: reply.authorAvatar, size: 24)
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 HStack(spacing: Spacing.xs) {
@@ -806,7 +878,9 @@ struct ReplyItem: View {
                         .foregroundColor(.textSecondaryDark)
                     }
 
-                    Button(action: {}) {
+                    Button(action: {
+                        onReply?(reply, rootCommentId)
+                    }) {
                         HStack(spacing: 2) {
                             Image(systemName: "bubble.right")
                                 .font(.system(size: 14))
@@ -822,251 +896,6 @@ struct ReplyItem: View {
     }
 }
 
-// MARK: - 发帖页面
-struct CreatePostView: View {
-    @State private var title = ""
-    @State private var content = ""
-    @State private var selectedChannel: Channel?
-    @State private var selectedTags: [PostTag] = []
-    @State private var showChannelPicker = false
-    @Environment(\.colorScheme) var colorScheme
-    @Environment(\.dismiss) var dismiss
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // 频道选择
-            Button(action: { showChannelPicker = true }) {
-                HStack {
-                    Image(systemName: selectedChannel?.iconName ?? "bubble.left.and.bubble.right")
-                        .foregroundColor(.reefPrimary)
-                    Text(selectedChannel?.name ?? "选择频道")
-                        .font(.labelMedium)
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .padding(Spacing.md)
-                .background(
-                    RoundedRectangle(cornerRadius: CornerRadius.lg)
-                        .fill(colorScheme == .dark ? Color.surfaceDark : Color.surfaceLight)
-                )
-            }
-            .padding(.horizontal, Spacing.lg)
-            .padding(.top, Spacing.lg)
-
-            // 标题输入
-            TextField("标题", text: $title)
-                .font(.titleMedium)
-                .foregroundColor(colorScheme == .dark ? .white : .black)
-                .padding(.horizontal, Spacing.lg)
-                .padding(.top, Spacing.lg)
-
-            Divider()
-                .padding(.horizontal, Spacing.lg)
-                .padding(.top, Spacing.sm)
-
-            // 内容输入
-            ZStack(alignment: .topLeading) {
-                if content.isEmpty {
-                    Text("分享你的海缸故事...")
-                        .font(.bodyLarge)
-                        .foregroundColor(.textSecondaryDark)
-                        .padding(.horizontal, Spacing.md)
-                        .padding(.top, Spacing.md)
-                }
-                TextEditor(text: $content)
-                    .font(.bodyLarge)
-                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                    .scrollContentBackground(.hidden)
-                    .background(Color.clear)
-                    .padding(.horizontal, Spacing.xs)
-            }
-            .padding(.horizontal, Spacing.md)
-            .frame(minHeight: 200)
-
-            Spacer()
-
-            // 底部工具栏
-            VStack(spacing: 0) {
-                Rectangle()
-                    .fill(colorScheme == .dark ? Color.borderDark : Color.borderLight)
-                    .frame(height: 1)
-
-                HStack(spacing: Spacing.xl) {
-                    Button(action: {}) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "photo")
-                                .font(.system(size: 22))
-                            Text("图片")
-                                .font(.system(size: 10))
-                        }
-                        .foregroundColor(.textSecondaryDark)
-                    }
-
-                    Button(action: {}) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "link")
-                                .font(.system(size: 22))
-                            Text("链接")
-                                .font(.system(size: 10))
-                        }
-                        .foregroundColor(.textSecondaryDark)
-                    }
-
-                    Button(action: {}) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "number")
-                                .font(.system(size: 22))
-                            Text("标签")
-                                .font(.system(size: 10))
-                        }
-                        .foregroundColor(.textSecondaryDark)
-                    }
-
-                    Spacer()
-                }
-                .padding(.horizontal, Spacing.lg)
-                .padding(.top, Spacing.md)
-                .padding(.bottom, Spacing.lg)
-            }
-            .background(colorScheme == .dark ? Color.surfaceDark : Color.surfaceLight)
-            .padding(.bottom, 34) // Safe area bottom padding
-        }
-        .background(Color.adaptiveBackground(for: colorScheme))
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("取消") {
-                    dismiss()
-                }
-                .foregroundColor(.textSecondaryDark)
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("发布") {
-                    // 发布帖子
-                    dismiss()
-                }
-                .font(.labelMedium)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, Spacing.sm)
-                .background(
-                    Capsule()
-                        .fill(title.isEmpty || selectedChannel == nil ? Color.gray : Color.reefPrimary)
-                )
-                .disabled(title.isEmpty || selectedChannel == nil)
-            }
-        }
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .sheet(isPresented: $showChannelPicker) {
-            ChannelPickerSheet(selectedChannel: $selectedChannel)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-        }
-    }
-}
-
-// MARK: - 频道选择Sheet
-struct ChannelPickerSheet: View {
-    @Binding var selectedChannel: Channel?
-    @StateObject private var viewModel = ChannelListViewModel()
-    @Environment(\.colorScheme) var colorScheme
-    @Environment(\.dismiss) var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                if viewModel.isLoading && viewModel.channels.isEmpty {
-                    VStack(spacing: Spacing.md) {
-                        ProgressView()
-                        Text("加载频道中...")
-                            .font(.bodySmall)
-                            .foregroundColor(.textSecondaryDark)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.xl)
-                } else {
-                    VStack(alignment: .leading, spacing: Spacing.lg) {
-                        ForEach(ChannelCategory.allCases, id: \.self) { category in
-                            if let channels = viewModel.groupedChannels[category], !channels.isEmpty {
-                                VStack(alignment: .leading, spacing: Spacing.sm) {
-                                    Text(category.rawValue)
-                                        .font(.labelMedium)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.textSecondaryDark)
-                                        .padding(.horizontal, Spacing.lg)
-
-                                    ForEach(channels) { channel in
-                                        Button(action: {
-                                        selectedChannel = channel
-                                        dismiss()
-                                    }) {
-                                        HStack(spacing: Spacing.md) {
-                                            // 频道图标
-                                            ZStack {
-                                                Circle()
-                                                    .fill(channel.iconColor.opacity(0.15))
-                                                    .frame(width: 44, height: 44)
-                                                Image(systemName: channel.iconName)
-                                                    .font(.system(size: 18))
-                                                    .foregroundColor(channel.iconColor)
-                                            }
-
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                HStack(spacing: Spacing.xs) {
-                                                    Text(channel.name)
-                                                        .font(.labelMedium)
-                                                        .fontWeight(.medium)
-                                                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                                                    if channel.isHot {
-                                                        Text("🔥")
-                                                            .font(.system(size: 12))
-                                                    }
-                                                }
-                                                Text("\(channel.memberCount) 成员")
-                                                    .font(.bodySmall)
-                                                    .foregroundColor(.textSecondaryDark)
-                                            }
-
-                                            Spacer()
-
-                                            if selectedChannel?.id == channel.id {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundColor(.reefPrimary)
-                                            }
-                                        }
-                                        .padding(.horizontal, Spacing.lg)
-                                        .padding(.vertical, Spacing.sm)
-                                    }
-                                }
-                            }
-                            .padding(.vertical, Spacing.sm)
-                        }
-                    }
-                    .padding(.vertical, Spacing.md)
-                }
-            }
-            }
-            .background(Color.adaptiveBackground(for: colorScheme))
-            .navigationTitle("选择频道")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                    .foregroundColor(.reefPrimary)
-                }
-            }
-        }
-    }
-}
-
 // MARK: - 频道列表页
 struct ChannelListView: View {
     @StateObject private var viewModel = ChannelListViewModel()
@@ -1076,27 +905,13 @@ struct ChannelListView: View {
 
     var body: some View {
         ScrollView {
-            if viewModel.isLoading && viewModel.channels.isEmpty {
-                VStack(spacing: Spacing.md) {
-                    ProgressView()
-                    Text("加载频道中...")
-                        .font(.bodySmall)
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.xl)
-            } else if viewModel.channels.isEmpty {
-                VStack(spacing: Spacing.md) {
-                    Image(systemName: "square.grid.2x2")
-                        .font(.system(size: 40))
-                        .foregroundColor(.textSecondaryDark)
-                    Text("暂无频道")
-                        .font(.bodyMedium)
-                        .foregroundColor(.textSecondaryDark)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.xl)
-            } else {
+            ContentStateView(
+                isLoading: viewModel.isLoading,
+                isEmpty: viewModel.channels.isEmpty,
+                loadingMessage: "加载频道中...",
+                emptyIcon: "square.grid.2x2",
+                emptyMessage: "暂无频道"
+            ) {
                 VStack(alignment: .leading, spacing: Spacing.xl) {
                     // 热门推荐
                     let hotChannels = viewModel.channels.filter { $0.isHot }
@@ -1146,11 +961,7 @@ struct ChannelListView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(colorScheme == .dark ? .white : .black)
-                }
+                BackButton()
             }
             ToolbarItem(placement: .principal) {
                 Text("全部频道")
@@ -1330,6 +1141,127 @@ struct ChannelListItem: View {
                 )
         )
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+    }
+}
+
+// MARK: - 搜索结果页
+struct SearchResultsView: View {
+    let initialQuery: String
+    @StateObject private var viewModel = SearchViewModel()
+    @State private var searchText: String
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.dismiss) var dismiss
+
+    init(query: String) {
+        self.initialQuery = query
+        self._searchText = State(initialValue: query)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            searchHeader
+            resultsList
+        }
+        .background(Color.adaptiveBackground(for: colorScheme))
+        .navigationBarHidden(true)
+        .task {
+            await viewModel.search(query: initialQuery)
+        }
+    }
+
+    private var searchHeader: some View {
+        HStack(spacing: Spacing.md) {
+            Button(action: { dismiss() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+            }
+
+            SearchBar(text: $searchText, placeholder: "搜索帖子...") {
+                Task { await viewModel.search(query: searchText) }
+            }
+        }
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.md)
+        .background(.ultraThinMaterial)
+    }
+
+    private var resultsList: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                if viewModel.isLoading && viewModel.searchResults.isEmpty {
+                    loadingView
+                } else if viewModel.searchResults.isEmpty {
+                    emptyView
+                } else {
+                    resultsContent
+                }
+            }
+            .padding(.bottom, Size.tabBarHeight + Spacing.lg)
+        }
+    }
+
+    private var loadingView: some View {
+        LoadingView("搜索中...")
+    }
+
+    private var emptyView: some View {
+        EmptyStateView(
+            icon: "magnifyingglass",
+            message: "未找到相关结果",
+            description: "尝试其他关键词"
+        )
+    }
+
+    private var resultsContent: some View {
+        Group {
+            searchResultsHeader
+
+            ForEach(viewModel.searchResults) { post in
+                NavigationLink(destination: PostDetailView(post: post)) {
+                    PostListItem(post: post)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if viewModel.hasMoreResults {
+                loadMoreButton
+            }
+        }
+    }
+
+    private var searchResultsHeader: some View {
+        HStack {
+            Text("搜索结果")
+                .font(.labelMedium)
+                .fontWeight(.bold)
+                .foregroundColor(.textSecondaryDark)
+            Spacer()
+            Text("\(viewModel.searchResults.count) 条结果")
+                .font(.bodySmall)
+                .foregroundColor(.textSecondaryDark)
+        }
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.md)
+    }
+
+    private var loadMoreButton: some View {
+        Button(action: {
+            Task { await viewModel.loadMore() }
+        }) {
+            HStack {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else {
+                    Text("加载更多")
+                        .font(.labelMedium)
+                }
+            }
+            .foregroundColor(.reefPrimary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.md)
+        }
     }
 }
 
