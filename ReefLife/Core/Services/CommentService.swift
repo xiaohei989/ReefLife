@@ -31,27 +31,40 @@ final class CommentService: CommentServiceProtocol {
     // MARK: - 获取帖子评论（只获取顶级评论）
 
     func getComments(postId: String, page: Int = 1, limit: Int = 20) async throws -> [Comment] {
-        let response: [DBCommentDetail] = try await supabase.database
-            .from(Views.commentDetails)
-            .select()
-            .eq("post_id", value: postId)
-            .is("parent_id", value: nil)  // 只获取顶级评论
-            .order("created_at", ascending: true)
-            .range(from: (page - 1) * limit, to: page * limit - 1)
-            .execute()
-            .value
+        let offset = (page - 1) * limit
 
-        // 转换为领域模型
-        var comments = response.map { $0.toDomain() }
+        do {
+            let response: [DBCommentDetail] = try await supabase.database
+                .from(Views.commentDetails)
+                .select()
+                .eq("post_id", value: postId)
+                .is("parent_id", value: nil)
+                .order("created_at", ascending: false)
+                .range(from: offset, to: offset + limit - 1)
+                .execute()
+                .value
 
-        // 批量获取每个评论的回复
-        for i in 0..<comments.count {
-            let replies = try await getReplies(commentId: comments[i].id, limit: 10)
-            comments[i].replies = replies
+            let comments = response.map { $0.toDomain() }
+            return try await enrichCommentsWithLikeState(comments)
+        } catch {
+            if let decodingError = error as? DecodingError {
+                var errorMessage = "评论数据解码失败: "
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    errorMessage += "缺失字段 '\(key.stringValue)' 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                case .valueNotFound(let type, let context):
+                    errorMessage += "值缺失 类型: \(type) 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                case .typeMismatch(let type, let context):
+                    errorMessage += "类型不匹配 期望: \(type) 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                case .dataCorrupted(let context):
+                    errorMessage += "数据损坏 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                @unknown default:
+                    errorMessage += "未知错误"
+                }
+                throw CommentError.decodingFailed(errorMessage)
+            }
+            throw error
         }
-
-        // 获取用户点赞状态
-        return try await enrichCommentsWithLikeState(comments)
     }
 
     // MARK: - 获取评论的回复
@@ -295,7 +308,7 @@ final class CommentService: CommentServiceProtocol {
                     "p_post_id": dto.postId,
                     "p_comment_id": comment.id,
                     "p_title": "有人回复了你的评论",
-                    "p_body": String(comment.content.prefix(50))
+                    "p_body": String((comment.content ?? "").prefix(50))
                 ])
                 .execute()
         } else {
@@ -308,7 +321,7 @@ final class CommentService: CommentServiceProtocol {
                     "p_post_id": dto.postId,
                     "p_comment_id": comment.id,
                     "p_title": "有人评论了你的帖子",
-                    "p_body": String(comment.content.prefix(50))
+                    "p_body": String((comment.content ?? "").prefix(50))
                 ])
                 .execute()
         }
@@ -324,6 +337,7 @@ enum CommentError: LocalizedError {
     case updateFailed
     case deleteFailed
     case maxDepthReached
+    case decodingFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -339,6 +353,8 @@ enum CommentError: LocalizedError {
             return "删除失败，请稍后重试"
         case .maxDepthReached:
             return "评论层级已达上限"
+        case .decodingFailed(let message):
+            return message
         }
     }
 }

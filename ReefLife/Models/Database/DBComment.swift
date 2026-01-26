@@ -37,15 +37,15 @@ struct DBComment: Codable {
 // MARK: - 评论详情视图模型
 struct DBCommentDetail: Codable {
     let id: String
-    let postId: String
-    let authorId: String
+    let postId: String?
+    let authorId: String?
     let parentId: String?
-    let content: String
+    let content: String?
     let likes: Int?
     let replyCount: Int?
-    let isDeleted: Bool?  // 添加缺失字段
+    let isDeleted: Bool?
     let createdAt: Date?
-    let updatedAt: Date?  // 添加缺失字段
+    let updatedAt: Date?
     let depth: Int?
     let path: [String]?  // 添加缺失字段
     let authorName: String?
@@ -68,13 +68,13 @@ struct DBCommentDetail: Codable {
 
     /// 转换为领域模型
     func toDomain(isLiked: Bool = false, replies: [Comment] = []) -> Comment {
-        Comment(
+        return Comment(
             id: id,
-            postId: postId,
-            authorId: authorId,
+            postId: postId ?? "",
+            authorId: authorId ?? "",
             authorName: authorName ?? "未知用户",
             authorAvatar: authorAvatar ?? "",
-            content: content,
+            content: content ?? "",
             likes: likes ?? 0,
             createdAt: createdAt ?? Date(),
             replies: replies
@@ -86,7 +86,7 @@ struct DBCommentDetail: Codable {
 struct DBCommentLike: Codable {
     let id: String?
     let commentId: String
-    let userId: String
+    let userId: String?
     let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {

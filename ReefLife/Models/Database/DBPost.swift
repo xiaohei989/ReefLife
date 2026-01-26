@@ -50,29 +50,29 @@ struct DBPost: Codable {
 // MARK: - 帖子详情视图模型（包含关联数据）
 struct DBPostDetail: Codable {
     let id: String
-    let authorId: String
-    let channelId: String
-    let title: String
-    let content: String
-    let imageUrls: [String]
-    let tags: [String]
-    let upvotes: Int
-    let downvotes: Int
-    let commentCount: Int
-    let viewCount: Int
-    let bookmarkCount: Int
-    let isPinned: Bool
-    let isFeatured: Bool
-    let isLocked: Bool
-    let createdAt: Date
+    let authorId: String?
+    let channelId: String?
+    let title: String?
+    let content: String?
+    let imageUrls: [String]?
+    let tags: [String]?
+    let upvotes: Int?
+    let downvotes: Int?
+    let commentCount: Int?
+    let viewCount: Int?
+    let bookmarkCount: Int?
+    let isPinned: Bool?
+    let isFeatured: Bool?
+    let isLocked: Bool?
+    let createdAt: Date?
     let updatedAt: Date?
     let lastActivityAt: Date?
 
     // 关联数据
-    let authorName: String
+    let authorName: String?
     let authorAvatar: String?
     let authorTitle: String?
-    let channelName: String
+    let channelName: String?
     let channelIcon: String?
 
     enum CodingKeys: String, CodingKey {
@@ -100,19 +100,19 @@ struct DBPostDetail: Codable {
     func toDomain(userVote: Int? = nil, isBookmarked: Bool = false) -> Post {
         Post(
             id: id,
-            authorId: authorId,
-            authorName: authorName,
+            authorId: authorId ?? "",
+            authorName: authorName ?? "未知用户",
             authorAvatar: authorAvatar ?? "",
-            channelId: channelId,
-            channelName: channelName,
-            title: title,
-            content: content,
-            imageURLs: imageUrls,
-            tags: tags.compactMap { PostTag(rawValue: mapTagFromDB($0)) },
-            upvotes: upvotes,
-            downvotes: downvotes,
-            commentCount: commentCount,
-            createdAt: createdAt,
+            channelId: channelId ?? "",
+            channelName: channelName ?? "未知频道",
+            title: title ?? "",
+            content: content ?? "",
+            imageURLs: imageUrls ?? [],
+            tags: (tags ?? []).compactMap { PostTag(rawValue: mapTagFromDB($0)) },
+            upvotes: upvotes ?? 0,
+            downvotes: downvotes ?? 0,
+            commentCount: commentCount ?? 0,
+            createdAt: createdAt ?? Date(),
             isBookmarked: isBookmarked
         )
     }

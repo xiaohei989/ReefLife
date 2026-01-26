@@ -88,21 +88,41 @@ final class PostService: PostServiceProtocol {
     // MARK: - 获取单个帖子
 
     func getPost(id: String) async throws -> Post {
-        let response: DBPostDetail = try await supabase.database
-            .from(Views.postDetails)
-            .select()
-            .eq("id", value: id)
-            .single()
-            .execute()
-            .value
+        do {
+            let response: DBPostDetail = try await supabase.database
+                .from(Views.postDetails)
+                .select()
+                .eq("id", value: id)
+                .single()
+                .execute()
+                .value
 
-        // 增加浏览量
-        try? await incrementViewCount(id: id)
+            // 增加浏览量
+            try? await incrementViewCount(id: id)
 
-        // 记录浏览历史
-        try? await recordViewHistory(postId: id)
+            // 记录浏览历史
+            try? await recordViewHistory(postId: id)
 
-        return try await enrichPostWithUserState(response)
+            return try await enrichPostWithUserState(response)
+        } catch {
+            if let decodingError = error as? DecodingError {
+                var errorMessage = "帖子数据解码失败: "
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    errorMessage += "缺失字段 '\(key.stringValue)' 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                case .valueNotFound(let type, let context):
+                    errorMessage += "值缺失 类型: \(type) 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                case .typeMismatch(let type, let context):
+                    errorMessage += "类型不匹配 期望: \(type) 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                case .dataCorrupted(let context):
+                    errorMessage += "数据损坏 路径: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+                @unknown default:
+                    errorMessage += "未知错误"
+                }
+                throw PostError.decodingFailed(errorMessage)
+            }
+            throw error
+        }
     }
 
     // MARK: - 创建帖子
@@ -391,6 +411,7 @@ enum PostError: LocalizedError {
     case createFailed
     case updateFailed
     case deleteFailed
+    case decodingFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -404,6 +425,8 @@ enum PostError: LocalizedError {
             return "更新失败，请稍后重试"
         case .deleteFailed:
             return "删除失败，请稍后重试"
+        case .decodingFailed(let message):
+            return message
         }
     }
 }
